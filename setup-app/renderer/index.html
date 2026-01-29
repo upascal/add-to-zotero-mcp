@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline'; script-src 'self'">
+  <title>Add to Zotero — Setup</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="container">
+    <!-- Header -->
+    <header class="header">
+      <div class="logo">
+        <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
+          <rect width="32" height="32" rx="8" fill="#CC2936"/>
+          <text x="16" y="23" text-anchor="middle" font-size="20" font-weight="bold" fill="white">Z</text>
+        </svg>
+      </div>
+      <div>
+        <h1>Add to Zotero</h1>
+        <p class="subtitle">MCP Server Setup</p>
+      </div>
+    </header>
+
+    <!-- Form View -->
+    <div id="form-view">
+      <div id="update-badge" class="badge badge-info" style="display: none;">
+        Updating existing configuration
+      </div>
+
+      <!-- Step 1: Library ID -->
+      <div class="step">
+        <div class="step-header">
+          <span class="step-number">1</span>
+          <div>
+            <h2>Zotero Library ID</h2>
+            <p class="step-help">
+              Find your Library ID at
+              <a href="#" id="link-keys" class="link">zotero.org/settings/keys</a>
+              — it's labeled "Your userID for use in API calls."
+            </p>
+          </div>
+        </div>
+        <input
+          type="text"
+          id="library-id"
+          placeholder="e.g. 1234567"
+          autocomplete="off"
+          spellcheck="false"
+        >
+        <div id="library-id-error" class="field-error"></div>
+      </div>
+
+      <!-- Step 2: API Key -->
+      <div class="step">
+        <div class="step-header">
+          <span class="step-number">2</span>
+          <div>
+            <h2>Zotero API Key</h2>
+            <p class="step-help">
+              On the same page, click "Create new private key."
+              Enable <strong>Allow library access</strong> and <strong>Allow write access</strong>.
+            </p>
+          </div>
+        </div>
+        <input
+          type="password"
+          id="api-key"
+          placeholder="Paste your API key"
+          autocomplete="off"
+          spellcheck="false"
+        >
+        <div id="api-key-error" class="field-error"></div>
+
+        <!-- Test Connection -->
+        <button id="btn-test" class="btn btn-secondary" disabled>
+          <span id="test-label">Test Connection</span>
+          <span id="test-spinner" class="spinner" style="display: none;"></span>
+        </button>
+        <div id="test-result" class="test-result" style="display: none;"></div>
+      </div>
+
+      <!-- Step 3: Claude Desktop -->
+      <div class="step">
+        <div class="step-header">
+          <span class="step-number">3</span>
+          <div>
+            <h2>Configure Claude Desktop</h2>
+            <p class="step-help">
+              Automatically add the MCP server to Claude Desktop's configuration.
+            </p>
+          </div>
+        </div>
+        <label class="toggle-row">
+          <input type="checkbox" id="configure-claude" checked>
+          <span class="toggle-label">Update Claude Desktop config</span>
+        </label>
+        <div id="claude-status" class="claude-status"></div>
+      </div>
+
+      <!-- Save -->
+      <div class="actions">
+        <button id="btn-save" class="btn btn-primary" disabled>
+          <span id="save-label">Save Configuration</span>
+          <span id="save-spinner" class="spinner" style="display: none;"></span>
+        </button>
+        <div id="save-error" class="field-error"></div>
+      </div>
+    </div>
+
+    <!-- Success View -->
+    <div id="success-view" style="display: none;">
+      <div class="success-card">
+        <div class="success-icon">&#10003;</div>
+        <h2>You're all set!</h2>
+        <p>Your Zotero credentials have been saved.</p>
+        <div id="success-details" class="success-details"></div>
+        <div class="next-steps">
+          <h3>Next steps</h3>
+          <ol>
+            <li>Quit and reopen Claude Desktop</li>
+            <li>Look for <strong>add-to-zotero</strong> in Claude's tools</li>
+            <li>Ask Claude to save something to your Zotero library!</li>
+          </ol>
+        </div>
+        <button id="btn-edit" class="btn btn-secondary">Edit Configuration</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>

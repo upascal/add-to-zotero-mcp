@@ -1,0 +1,8 @@
+.env
+.venv/
+__pycache__/
+*.pyc
+
+# Electron setup app
+setup-app/node_modules/
+setup-app/dist/

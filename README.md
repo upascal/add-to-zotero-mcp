@@ -13,7 +13,7 @@ A minimal MCP server that lets Claude create items in your Zotero library.
 ## Quick Start
 
 ```bash
-cd zotero_writer
+cd add-to-zotero-mcp
 python3 -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
@@ -33,7 +33,7 @@ The setup script will guide you through entering your Zotero credentials and con
 ### 2. Install
 
 ```bash
-cd zotero_writer
+cd add-to-zotero-mcp
 
 # Create virtual environment
 python3 -m venv .venv
@@ -64,8 +64,8 @@ Add to your Claude Desktop config file:
 {
   "mcpServers": {
     "add-to-zotero": {
-      "command": "/path/to/zotero_writer/.venv/bin/python",
-      "args": ["/path/to/zotero_writer/server.py"],
+      "command": "/path/to/add-to-zotero-mcp/.venv/bin/python",
+      "args": ["/path/to/add-to-zotero-mcp/server.py"],
       "env": {
         "ZOTERO_API_KEY": "your_api_key_here",
         "ZOTERO_LIBRARY_ID": "your_library_id_here"

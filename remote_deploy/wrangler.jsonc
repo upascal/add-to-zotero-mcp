@@ -1,0 +1,11 @@
+{
+    "name": "add-to-zotero-mcp",
+    "main": "src/worker.py",
+    "compatibility_date": "2025-11-02",
+    "compatibility_flags": [
+        "python_workers"
+    ],
+    "observability": {
+        "enabled": true
+    }
+}

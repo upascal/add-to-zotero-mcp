@@ -2,10 +2,11 @@
   "permissions": {
     "allow": [
       "Bash(python3:*)",
-      "Bash(/Users/vibes/Documents/Development/Projects/zotero_writer/.venv/bin/pip show:*)",
-      "Bash(/Users/vibes/Documents/Development/Projects/zotero_writer/.venv/bin/python:*)",
+      "Bash(/Users/vibes/Documents/Development/Projects/add-to-zotero-mcp/.venv/bin/pip show:*)",
+      "Bash(/Users/vibes/Documents/Development/Projects/add-to-zotero-mcp/.venv/bin/python:*)",
       "Bash(python:*)",
-      "Bash(.venv/bin/python:*)"
+      "Bash(.venv/bin/python:*)",
+      "Bash(npm install:*)"
     ]
   }
 }
