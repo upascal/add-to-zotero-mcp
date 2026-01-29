@@ -79,27 +79,6 @@ Add to your Claude Desktop config file:
 
 The "add-to-zotero" tools should now appear.
 
-## Remote / HTTP Mode
-
-You can run the server remotely and connect via URL (e.g., for claude.ai):
-
-```bash
-# Start the server in HTTP mode
-python server.py --transport http --host 0.0.0.0 --port 8000
-
-# Expose via Cloudflare Tunnel (or similar)
-cloudflared tunnel --url http://localhost:8000
-```
-
-**Important:** When configuring the MCP URL, always include `/mcp` at the end:
-
-```
-✅ https://your-tunnel-url.trycloudflare.com/mcp
-❌ https://your-tunnel-url.trycloudflare.com
-```
-
-> **Note:** Zotero credentials can be set at runtime via Claude using the `configure_zotero` tool — no need to configure them on the server.
-
 ## Usage
 
 Once connected, you can ask Claude to:
@@ -113,8 +92,7 @@ Once connected, you can ask Claude to:
 
 | Tool | Description |
 |------|-------------|
-| `configure_zotero` | Set API credentials (for remote mode or reconfiguration) |
-| `create_zotero_item` | Create a new item with metadata, PDF, or snapshot |
+| `create_zotero_item` | Create a new item with metadata and optional PDF |
 | `attach_pdf_from_url` | Attach a PDF to an existing item |
 | `attach_snapshot` | Save a webpage as an HTML snapshot |
 | `list_collections` | List your Zotero collections |

@@ -15,11 +15,7 @@ Setup:
     Or set environment variables directly, or pass them via Claude Desktop config.
 
 Usage:
-    # Local mode (Claude Desktop)
     python server.py
-
-    # Remote HTTP mode
-    python server.py --transport http --host 0.0.0.0 --port 8000
 """
 
 import os
@@ -41,33 +37,18 @@ mcp = FastMCP("add-to-zotero")
 # Zotero client (initialized lazily)
 _zot = None
 
-# Runtime credentials (can be set via configure_zotero tool)
-_runtime_credentials = {
-    "api_key": None,
-    "library_id": None,
-    "library_type": "user"
-}
-
-
-class NotConfiguredError(Exception):
-    """Raised when Zotero credentials are not configured."""
-    pass
-
-
 def get_zotero_client():
     """Get or create Zotero client."""
     global _zot
     if _zot is None:
-        # Try runtime credentials first, then environment variables
-        api_key = _runtime_credentials["api_key"] or os.environ.get("ZOTERO_API_KEY")
-        library_id = _runtime_credentials["library_id"] or os.environ.get("ZOTERO_LIBRARY_ID")
-        library_type = _runtime_credentials["library_type"] or os.environ.get("ZOTERO_LIBRARY_TYPE", "user")
+        api_key = os.environ.get("ZOTERO_API_KEY")
+        library_id = os.environ.get("ZOTERO_LIBRARY_ID")
+        library_type = os.environ.get("ZOTERO_LIBRARY_TYPE", "user")
         
         if not api_key or not library_id:
-            raise NotConfiguredError(
-                "Zotero not configured. "
-                "Please call setup_zotero_step1_library_id first, then setup_zotero_step2_api_key. "
-                "Get credentials from: https://www.zotero.org/settings/keys"
+            raise ValueError(
+                "Missing ZOTERO_API_KEY or ZOTERO_LIBRARY_ID environment variables. "
+                "Get your API key from https://www.zotero.org/settings/keys"
             )
         
         _zot = zotero.Zotero(library_id, library_type, api_key)
@@ -143,226 +124,7 @@ ITEM_TYPE_MAP = {
 
 
 @mcp.tool()
-def setup_zotero_step1_library_id(library_id: str) -> dict:
-    """
-    Step 1 of Zotero setup: Set your Zotero Library ID.
-    
-    Call this FIRST when setting up Zotero. After this succeeds, 
-    call setup_zotero_step2_api_key to complete the connection.
-    
-    WHERE TO FIND IT:
-    Go to https://www.zotero.org/settings/keys
-    Look for "Your userID for use in API calls is: XXXXXX"
-    That number is your Library ID.
-    
-    Args:
-        library_id: Your Zotero user ID number (e.g., "1234567")
-    
-    Returns:
-        dict confirming the ID was saved, with next step instructions
-    """
-    global _runtime_credentials
-    
-    _runtime_credentials["library_id"] = library_id
-    
-    return {
-        "success": True,
-        "library_id": library_id,
-        "next_step": "Now call setup_zotero_step2_api_key with the user's API key"
-    }
-
-
-@mcp.tool()
-def setup_zotero_step2_api_key(api_key: str) -> dict:
-    """
-    Step 2 of Zotero setup: Set your Zotero API key and connect.
-    
-    Call this AFTER setup_zotero_step1_library_id. This will validate the 
-    credentials and establish the connection.
-    
-    On success, credentials are saved to .env for future sessions.
-    
-    WHERE TO GET IT:
-    Go to https://www.zotero.org/settings/keys
-    Click "Create new private key"
-    Check "Allow library access" 
-    Copy the key (shown only once!)
-    
-    IMPORTANT: Never echo the API key back - treat it as a secret.
-    
-    Args:
-        api_key: Your Zotero API key (keep secret, never display)
-    
-    Returns:
-        dict with connection status
-    """
-    global _zot, _runtime_credentials
-    
-    # Check if library_id was set first
-    if not _runtime_credentials["library_id"]:
-        return {
-            "success": False,
-            "error": "Library ID not set. Call setup_zotero_step1_library_id first."
-        }
-    
-    # Store the API key
-    _runtime_credentials["api_key"] = api_key
-    
-    # Reset client to force reconnection
-    _zot = None
-    
-    # Validate by trying to connect
-    try:
-        client = get_zotero_client()
-        # Try a simple API call to verify credentials work
-        collections = client.collections(limit=1)
-        
-        # Success! Save to .env for persistence
-        _save_credentials_to_env(
-            _runtime_credentials["library_id"],
-            api_key
-        )
-        
-        return {
-            "success": True,
-            "message": "Connected to Zotero and saved credentials!",
-            "library_id": _runtime_credentials["library_id"]
-            # Note: api_key intentionally NOT included
-        }
-    except Exception as e:
-        # Reset on failure
-        _runtime_credentials["api_key"] = None
-        _zot = None
-        return {
-            "success": False,
-            "error": str(e),
-            "suggestion": "Double-check your API key. The Library ID looks fine."
-        }
-
-
-def _save_credentials_to_env(library_id: str, api_key: str):
-    """Save credentials to .env file for persistence."""
-    env_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), ".env")
-    
-    # Read existing content if file exists
-    existing_lines = []
-    if os.path.exists(env_path):
-        with open(env_path, "r") as f:
-            existing_lines = f.readlines()
-    
-    # Filter out old Zotero credentials
-    new_lines = [
-        line for line in existing_lines
-        if not line.startswith("ZOTERO_API_KEY=") 
-        and not line.startswith("ZOTERO_LIBRARY_ID=")
-    ]
-    
-    # Add new credentials
-    new_lines.append(f"ZOTERO_LIBRARY_ID={library_id}\n")
-    new_lines.append(f"ZOTERO_API_KEY={api_key}\n")
-    
-    # Write back
-    with open(env_path, "w") as f:
-        f.writelines(new_lines)
-
-
-@mcp.tool()
-def get_zotero_help() -> dict:
-    """
-    Get workflow instructions for adding items to Zotero.
-    
-    Call this tool whenever you're unsure how to proceed, or at the start 
-    of a new Zotero task to ensure you follow the correct workflow.
-    
-    Returns:
-        dict with workflow instructions, available tools, and tips
-    """
-    return {
-        "workflow": {
-            "step1_fetch": (
-                "Use YOUR OWN built-in tools to fetch the URL content. "
-                "For example: web_fetch, read_url, or your browser tools. "
-                "DO NOT open new browser tabs if you can avoid it - just fetch the content."
-            ),
-            "step2_extract": (
-                "Read the content and extract metadata: "
-                "title, authors (may be organizations), date, abstract (write one if missing), "
-                "publisher/website name, and 2-5 descriptive tags."
-            ),
-            "step3_find_collection": (
-                "Call list_zotero_collections to find the right folder. "
-                "If user didn't specify and multiple options match, ask them."
-            ),
-            "step4_assess_confidence": (
-                "If confident (clear metadata, no guessing) -> proceed. "
-                "If uncertain (messy source, wrote abstract, guessed fields) -> ask user to confirm."
-            ),
-            "step5_save": (
-                "Call save_to_zotero with all extracted metadata. "
-                "Include pdf_url if PDF available, OR snapshot_url for webpages."
-            ),
-        },
-        "available_tools": [
-            "setup_zotero_step1_library_id - First step of setup",
-            "setup_zotero_step2_api_key - Second step of setup (validates & saves)",
-            "save_to_zotero - Save an item with metadata and attachments",
-            "list_zotero_collections - Find collection IDs",
-            "get_zotero_item_types - See valid item types",
-            "attach_pdf_from_url - Add PDF to existing item",
-            "attach_snapshot - Add webpage snapshot to existing item",
-        ],
-        "tips": [
-            "Always include tags (2-5 descriptive keywords)",
-            "Write an abstract if the source lacks one",
-            "Authors can be organizations like 'World Health Organization'",
-            "Use snapshot_url for webpages, pdf_url for documents",
-            "Don't open browser tabs just to read content - use fetch tools instead",
-        ]
-    }
-
-
-@mcp.tool()
-def prepare_url_for_zotero(url: str) -> dict:
-    """
-    Get instructions for fetching a URL's content before saving to Zotero.
-    
-    This tool does NOT fetch the content itself. Instead, it tells you 
-    which of YOUR OWN internal tools to use for fetching.
-    
-    Args:
-        url: The URL you want to fetch content from
-    
-    Returns:
-        Instructions on how to fetch the content
-    """
-    # Detect if it's a PDF
-    is_pdf = url.lower().endswith('.pdf') or '/pdf/' in url.lower()
-    
-    return {
-        "url": url,
-        "is_pdf": is_pdf,
-        "instructions": (
-            "DO NOT open a browser tab for this URL. "
-            "Use your built-in web_fetch or read_url tool to get the content. "
-            "Then extract the metadata and call save_to_zotero."
-        ) if not is_pdf else (
-            "This appears to be a PDF. When you call save_to_zotero, "
-            "include this URL as the pdf_url parameter to attach it. "
-            "Try to extract metadata from the PDF content or the page linking to it."
-        ),
-        "next_steps": [
-            f"1. Fetch content from {url} using your internal tools",
-            "2. Extract: title, authors, date, abstract, tags",
-            "3. Call list_zotero_collections to find the right folder",
-            "4. Call save_to_zotero with all metadata" + (
-                f" and pdf_url='{url}'" if is_pdf else f" and snapshot_url='{url}'"
-            )
-        ]
-    }
-
-
-@mcp.tool()
-def save_to_zotero(
+def create_zotero_item(
     title: str,
     item_type: str = "webpage",
     authors: Optional[list[str]] = None,
@@ -377,43 +139,28 @@ def save_to_zotero(
     tags: Optional[list[str]] = None,
     collection_id: Optional[str] = None,
     pdf_url: Optional[str] = None,
-    snapshot_url: Optional[str] = None,
     extra: Optional[str] = None,
 ) -> dict:
     """
     Create a new item in your Zotero library.
-    
-    WORKFLOW: Before calling this tool:
-    1. Fetch and read the source content thoroughly
-    2. Extract ALL available metadata: title, authors (may be org/govt body), 
-       date, abstract, publisher. Write an abstract if none exists.
-    3. Generate 2-5 descriptive tags based on the content topics
-    4. Call list_collections to find the right folder
-    5. If confident in extraction → proceed. If uncertain (messy source, 
-       guessed metadata, wrote abstract) → ask user to confirm first.
-    
-    ATTACHMENTS: Include pdf_url if a PDF is available, OR snapshot_url for 
-    webpages (PDF takes priority if both provided). This preserves the source.
     
     Args:
         title: Item title (required)
         item_type: Type of item. Options: article, journal, book, chapter, conference,
                    thesis, report, webpage, blog, news, magazine, document, legal,
                    case, patent, video, podcast, presentation
-        authors: List of author names (e.g., ["John Smith", "Jane Doe"]) - can be 
-                 organizations like "Department of Energy" or "WHO"
+        authors: List of author names (e.g., ["John Smith", "Jane Doe"])
         date: Publication date (e.g., "2025-07-25" or "July 2025" or "2025")
-        url: URL of the item (always include for web sources)
-        abstract: Abstract or summary - write one if the source lacks it
-        publication: Journal/publication/website name
+        url: URL of the item
+        abstract: Abstract or summary
+        publication: Journal/publication name (for articles)
         volume: Volume number
         issue: Issue number
         pages: Page range (e.g., "1-10")
         doi: DOI identifier
-        tags: 2-5 descriptive tags based on content topics (always include)
-        collection_id: Zotero collection ID (call list_zotero_collections first)
-        pdf_url: URL to download PDF attachment from (preferred over snapshot)
-        snapshot_url: URL to save as HTML snapshot (used if no pdf_url)
+        tags: List of tags to apply
+        collection_id: Zotero collection ID to add item to
+        pdf_url: URL to download PDF attachment from
         extra: Additional notes for the "Extra" field
     
     Returns:
@@ -504,14 +251,10 @@ def save_to_zotero(
                 "message": f"Created {zotero_type}: {title}"
             }
             
-            # Attach PDF if URL provided (takes priority)
+            # Attach PDF if URL provided
             if pdf_url:
                 pdf_result = _attach_pdf_from_url(item_key, pdf_url)
                 response["pdf_attachment"] = pdf_result
-            # Otherwise attach snapshot if URL provided
-            elif snapshot_url:
-                snapshot_result = _attach_snapshot(item_key, snapshot_url)
-                response["snapshot_attachment"] = snapshot_result
             
             return response
         else:
@@ -575,66 +318,6 @@ def _attach_pdf_from_url(
         return {"success": False, "error": f"Failed to attach PDF: {e}"}
 
 
-def _attach_snapshot(
-    parent_item_key: str,
-    url: str,
-    title: Optional[str] = None,
-) -> dict:
-    """Save a webpage as an HTML snapshot and attach it to an existing Zotero item."""
-    zot = get_zotero_client()
-    url = _unwrap_url(url)
-
-    try:
-        response = requests.get(url, timeout=60, headers={
-            "User-Agent": "Mozilla/5.0 (compatible; ZoteroWriter/1.0)"
-        })
-        response.raise_for_status()
-    except requests.RequestException as e:
-        return {"success": False, "error": f"Failed to fetch page: {e}"}
-
-    html = response.text
-
-    # Determine title
-    if not title:
-        match = re.search(r"<title[^>]*>(.*?)</title>", html, re.IGNORECASE | re.DOTALL)
-        if match:
-            title = match.group(1).strip()
-        else:
-            title = url
-
-    # Build a safe filename from the title
-    safe_name = re.sub(r'[^\w\s\-.]', '', title)[:80].strip() or "snapshot"
-    filename = f"{safe_name}.html"
-
-    # Save to temp file and upload
-    temp_path = None
-    try:
-        with tempfile.NamedTemporaryFile(
-            suffix=".html", prefix="zw_snap_", delete=False, mode="w",
-            encoding=response.encoding or "utf-8",
-        ) as f:
-            f.write(html)
-            temp_path = f.name
-
-        # Rename temp file so Zotero sees a meaningful filename
-        dest_path = os.path.join(os.path.dirname(temp_path), filename)
-        os.rename(temp_path, dest_path)
-        temp_path = dest_path
-
-        zot.attachment_simple([temp_path], parent_item_key)
-        return {
-            "success": True,
-            "filename": filename,
-            "title": title,
-            "size_bytes": len(html.encode(response.encoding or "utf-8")),
-        }
-    except Exception as e:
-        return {"success": False, "error": f"Failed to attach snapshot: {e}"}
-    finally:
-        if temp_path and os.path.exists(temp_path):
-            os.unlink(temp_path)
-
-
 @mcp.tool()
 def attach_pdf_from_url(
     parent_item_key: str,
@@ -663,12 +346,12 @@ def attach_snapshot(
 ) -> dict:
     """
     Save a webpage as an HTML snapshot and attach it to an existing Zotero item.
-    
-    IMPORTANT: Always call this after save_to_zotero for webpage sources.
-    Web content can change or disappear - snapshots preserve it permanently.
+
+    Downloads the page HTML and uploads it as an attachment.  Useful for
+    preserving web pages that may change or disappear.
 
     Args:
-        parent_item_key: The key returned by save_to_zotero
+        parent_item_key: The key of the parent item to attach the snapshot to
         url: URL of the webpage to snapshot
         title: Optional title for the snapshot (auto-extracted from page if omitted)
 
@@ -730,15 +413,12 @@ def attach_snapshot(
 
 
 @mcp.tool()
-def list_zotero_collections() -> list[dict]:
+def list_collections() -> list[dict]:
     """
-    List all collections (folders) in the Zotero library.
-    
-    WORKFLOW: Call this before save_to_zotero to find the right collection_id.
-    If user didn't specify a collection and multiple options match, ask them.
+    List all collections in your Zotero library.
     
     Returns:
-        List of collections with key (ID), name, and parent collection
+        List of collections with their IDs and names
     """
     zot = get_zotero_client()
     
@@ -757,42 +437,15 @@ def list_zotero_collections() -> list[dict]:
 
 
 @mcp.tool()
-def get_zotero_item_types() -> list[str]:
+def get_item_types() -> list[str]:
     """
     Get list of supported item types.
     
     Returns:
-        List of item type names you can use with save_to_zotero
+        List of item type names you can use with create_zotero_item
     """
     return list(ITEM_TYPE_MAP.keys())
 
 
 if __name__ == "__main__":
-    import argparse
-    
-    parser = argparse.ArgumentParser(description="Add to Zotero MCP Server")
-    parser.add_argument(
-        "--transport", 
-        choices=["stdio", "http"], 
-        default="stdio",
-        help="Transport mode: stdio (default, for Claude Desktop) or http (for remote)"
-    )
-    parser.add_argument(
-        "--host", 
-        default="127.0.0.1",
-        help="Host to bind to in HTTP mode (default: 127.0.0.1)"
-    )
-    parser.add_argument(
-        "--port", 
-        type=int, 
-        default=8000,
-        help="Port to listen on in HTTP mode (default: 8000)"
-    )
-    
-    args = parser.parse_args()
-    
-    if args.transport == "http":
-        print(f"Starting HTTP server at http://{args.host}:{args.port}/mcp")
-        mcp.run(transport="http", host=args.host, port=args.port)
-    else:
-        mcp.run()
+    mcp.run()
