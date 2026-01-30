@@ -92,6 +92,26 @@ export function resolveItemType(simple) {
 }
 
 /**
+ * Format a raw Zotero item into a clean summary object.
+ */
+function formatItemSummary(raw) {
+  const d = raw.data || raw;
+  const creators = (d.creators || [])
+    .map((c) => (c.name ? c.name : `${c.firstName || ""} ${c.lastName || ""}`.trim()))
+    .filter(Boolean)
+    .join("; ");
+  return {
+    key: raw.key || d.key,
+    title: d.title || "(untitled)",
+    itemType: d.itemType,
+    creators: creators || null,
+    date: d.date || null,
+    tags: (d.tags || []).map((t) => t.tag || t),
+    url: d.url || null,
+  };
+}
+
+/**
  * List all collections in the library.
  */
 export async function listCollections(apiKey, libraryId) {
@@ -335,5 +355,262 @@ export async function attachSnapshot(apiKey, libraryId, parentItemKey, url, titl
     return { success: true, filename, title, size_bytes: buffer.length };
   } catch (err) {
     return { success: false, error: `Failed to attach snapshot: ${err.message}` };
+  }
+}
+
+// -------------------------------------------------------------------------
+// Search & Browse
+// -------------------------------------------------------------------------
+
+/**
+ * Search items in the library by text query, tags, item type, or collection.
+ */
+export async function searchItems(
+  apiKey,
+  libraryId,
+  { query, tag, itemType, collectionId, sort = "dateModified", direction = "desc", limit = 25, offset = 0 }
+) {
+  const zot = zotClient(apiKey, libraryId);
+  const params = { sort, direction, limit, start: offset };
+
+  if (query) params.q = query;
+  if (tag) params.tag = Array.isArray(tag) ? tag.join(" || ") : tag;
+  if (itemType) params.itemType = resolveItemType(itemType);
+
+  try {
+    let response;
+    if (collectionId) {
+      response = await zot.collections(collectionId).items().top().get(params);
+    } else {
+      response = await zot.items().top().get(params);
+    }
+
+    const totalResults = response.response?.headers?.get("Total-Results") || null;
+    const items = (response.raw || [])
+      .filter((r) => r.data?.itemType !== "attachment" && r.data?.itemType !== "note")
+      .map(formatItemSummary);
+
+    return { items, totalResults: totalResults ? parseInt(totalResults, 10) : items.length, offset, limit };
+  } catch (err) {
+    return { error: err.message };
+  }
+}
+
+/**
+ * Get full metadata for a single item by its key, including children summary.
+ */
+export async function getItem(apiKey, libraryId, itemKey) {
+  const zot = zotClient(apiKey, libraryId);
+  try {
+    const [itemResp, childrenResp] = await Promise.all([
+      zot.items(itemKey).get(),
+      zot.items(itemKey).children().get(),
+    ]);
+
+    const raw = itemResp.raw;
+    const data = raw.data || raw;
+
+    const children = (childrenResp.raw || []).map((c) => ({
+      key: c.key,
+      itemType: c.data?.itemType,
+      title: c.data?.title || c.data?.note?.slice(0, 100) || null,
+      contentType: c.data?.contentType || null,
+    }));
+
+    return {
+      key: raw.key,
+      version: raw.version,
+      ...data,
+      children,
+    };
+  } catch (err) {
+    return { error: err.message };
+  }
+}
+
+/**
+ * Get the full-text content of an item (extracted text from PDFs, notes, etc.).
+ */
+export async function getItemFulltext(apiKey, libraryId, itemKey) {
+  const zot = zotClient(apiKey, libraryId);
+  try {
+    // First check if this item has fulltext directly
+    try {
+      const ftResp = await zot.items(itemKey).fulltext().get();
+      const ftData = ftResp.getData?.() || ftResp.raw;
+      if (ftData?.content) {
+        return { item_key: itemKey, content: ftData.content, source: "fulltext_api" };
+      }
+    } catch {
+      // No direct fulltext — try children
+    }
+
+    // Look for child attachments with fulltext
+    const childrenResp = await zot.items(itemKey).children().get();
+    const attachments = (childrenResp.raw || []).filter(
+      (c) => c.data?.itemType === "attachment" && c.data?.contentType
+    );
+
+    for (const att of attachments) {
+      try {
+        const ftResp = await zot.items(att.key).fulltext().get();
+        const ftData = ftResp.getData?.() || ftResp.raw;
+        if (ftData?.content) {
+          return {
+            item_key: itemKey,
+            attachment_key: att.key,
+            content: ftData.content,
+            source: "child_attachment_fulltext",
+          };
+        }
+      } catch {
+        continue;
+      }
+    }
+
+    return { item_key: itemKey, content: null, message: "No full-text content available for this item." };
+  } catch (err) {
+    return { error: err.message };
+  }
+}
+
+/**
+ * List items in a specific collection.
+ */
+export async function getCollectionItems(
+  apiKey,
+  libraryId,
+  collectionId,
+  { sort = "dateModified", direction = "desc", limit = 25, offset = 0 }
+) {
+  const zot = zotClient(apiKey, libraryId);
+  try {
+    const response = await zot.collections(collectionId).items().top().get({
+      sort,
+      direction,
+      limit,
+      start: offset,
+    });
+
+    const totalResults = response.response?.headers?.get("Total-Results") || null;
+    const items = (response.raw || [])
+      .filter((r) => r.data?.itemType !== "attachment" && r.data?.itemType !== "note")
+      .map(formatItemSummary);
+
+    return { items, totalResults: totalResults ? parseInt(totalResults, 10) : items.length, offset, limit };
+  } catch (err) {
+    return { error: err.message };
+  }
+}
+
+/**
+ * List all tags in the library.
+ */
+export async function listTags(apiKey, libraryId, { limit = 100, offset = 0 }) {
+  const zot = zotClient(apiKey, libraryId);
+  try {
+    const response = await zot.tags().get({ limit, start: offset });
+    const tags = (response.raw || []).map((t) => ({
+      tag: t.tag,
+      numItems: t.meta?.numItems || 0,
+    }));
+    return { tags, offset, limit };
+  } catch (err) {
+    return { error: err.message };
+  }
+}
+
+/**
+ * Get recently added or modified items.
+ */
+export async function getRecentItems(apiKey, libraryId, { limit = 10, sort = "dateAdded" }) {
+  const zot = zotClient(apiKey, libraryId);
+  try {
+    const response = await zot.items().top().get({ sort, direction: "desc", limit });
+    const items = (response.raw || [])
+      .filter((r) => r.data?.itemType !== "attachment" && r.data?.itemType !== "note")
+      .map(formatItemSummary);
+    return { items };
+  } catch (err) {
+    return { error: err.message };
+  }
+}
+
+// -------------------------------------------------------------------------
+// Write / Manage
+// -------------------------------------------------------------------------
+
+/**
+ * Create a note attached to an existing item.
+ */
+export async function createNote(apiKey, libraryId, parentItemKey, content, tags = []) {
+  const zot = zotClient(apiKey, libraryId);
+  try {
+    const template = await getItemTemplate("note");
+    template.parentItem = parentItemKey;
+    template.note = content;
+    if (tags.length > 0) {
+      template.tags = tags.map((t) => ({ tag: t }));
+    }
+
+    const response = await zot.items().post([template]);
+    const created = response.getEntityByIndex(0);
+    if (!created) {
+      return { success: false, error: "Failed to create note" };
+    }
+    return { success: true, item_key: created.key, message: `Note created on item ${parentItemKey}` };
+  } catch (err) {
+    return { success: false, error: err.message };
+  }
+}
+
+/**
+ * Update metadata on an existing item.
+ */
+export async function updateItem(apiKey, libraryId, itemKey, changes) {
+  const zot = zotClient(apiKey, libraryId);
+  try {
+    // Fetch current item to get version and existing data
+    const itemResp = await zot.items(itemKey).get();
+    const raw = itemResp.raw;
+    const version = raw.version;
+    const data = { ...raw.data };
+
+    // Apply changes
+    if (changes.title !== undefined) data.title = changes.title;
+    if (changes.abstract !== undefined) data.abstractNote = changes.abstract;
+    if (changes.date !== undefined) data.date = changes.date;
+    if (changes.extra !== undefined) data.extra = changes.extra;
+
+    // Tag handling: replace, add, or remove
+    if (changes.tags !== undefined) {
+      data.tags = changes.tags.map((t) => ({ tag: t }));
+    } else {
+      const existingTags = (data.tags || []).map((t) => t.tag || t);
+      let updated = [...existingTags];
+      if (changes.add_tags) {
+        for (const t of changes.add_tags) {
+          if (!updated.includes(t)) updated.push(t);
+        }
+      }
+      if (changes.remove_tags) {
+        updated = updated.filter((t) => !changes.remove_tags.includes(t));
+      }
+      if (changes.add_tags || changes.remove_tags) {
+        data.tags = updated.map((t) => ({ tag: t }));
+      }
+    }
+
+    // Collections
+    if (changes.collections !== undefined) {
+      data.collections = changes.collections;
+    }
+
+    // PATCH the item
+    await zot.items(itemKey).patch(version, data);
+
+    return { success: true, item_key: itemKey, message: `Item ${itemKey} updated` };
+  } catch (err) {
+    return { success: false, error: err.message };
   }
 }
