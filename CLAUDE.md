@@ -2,13 +2,13 @@
 
 ## Purpose
 
-This MCP server enables Claude to save items to the user's Zotero library. It's designed for **non-standard information sources** — primary source materials, government documents, webpages, obscure PDFs — where automated metadata extraction fails.
+This MCP server enables Claude to **read, write, and manage** items in the user's Zotero library. It's designed for **non-standard information sources** — primary source materials, government documents, webpages, obscure PDFs — where automated metadata extraction fails.
 
 The key insight: **Claude is the intelligence layer**. Unlike typical Zotero integrations that rely on structured metadata, this MCP leverages Claude's ability to:
 - Read and understand unstructured documents
 - Extract bibliographic information from messy sources
 - Determine the appropriate item type (report, legal document, webpage, etc.)
-- Identify abstracts, authors, and dates that aren't in standard formats
+- Search and analyze the user's existing library
 
 ## Design Philosophy
 
@@ -16,26 +16,49 @@ The key insight: **Claude is the intelligence layer**. Unlike typical Zotero int
 2. **Thorough metadata** — Always aim to capture: title, authors, date, abstract, publisher, URL, and a snapshot/PDF
 3. **Preserve sources** — Attach snapshots for webpages, PDFs for documents (sources may disappear)
 4. **Use collections** — Ask the user which collection/folder if unclear
+5. **Avoid duplicates** — Search before creating new items
+
+## Available Tools (14 total)
+
+### Search & Browse
+- `search_items` — Search library by text, tags, type, or collection
+- `get_collection_items` — List items in a specific collection
+- `get_recent_items` — Recently added/modified items
+- `list_collections` — All collections (folders) in the library
+- `list_tags` — All tags in library
+
+### Read
+- `get_item` — Full metadata + children summary for a single item
+- `get_item_fulltext` — Extracted text content (from PDFs, notes, etc.)
+
+### Write
+- `save_item` — Create new item with metadata + attachments
+- `attach_pdf` — Attach PDF to existing item
+- `attach_snapshot` — Attach webpage snapshot to existing item
+- `create_note` — Create note on existing item (for analysis/summaries)
+- `update_item` — Modify metadata/tags on existing item
+
+### Utility
+- `get_help` — Workflow instructions (call when unsure)
+- `get_item_types` — List valid item types
+- `prepare_url` — Get fetch instructions for a URL
 
 ## Recommended Workflow
 
-When adding a URL or document to Zotero:
+### Adding a URL or document to Zotero:
 
-1. **Fetch the content** — Use web tools to get the full text
-2. **Extract metadata** — Use your intelligence to identify:
-   - Title
-   - Author(s) — may be an organization, government body, or individual
-   - Publication date (even if approximate)
-   - Abstract or summary (write one if not present)
-   - Publisher or website name
-   - Item type (webpage, report, legal, document, etc.)
-   - **2-5 descriptive tags** based on content topics
-3. **Assess your confidence** — See approval rules below
-4. **Find the right collection** — Call `list_collections`; ask user if multiple options
-5. **Create the item with attachment** — Call `create_zotero_item` with:
-   - All extracted metadata
-   - `pdf_url` if a PDF is available (preferred)
-   - `snapshot_url` for webpages (used if no PDF)
+1. **Check for duplicates** — Call `search_items` with keywords from the title
+2. **Fetch the content** — Use your web tools to get the full text (DO NOT open browser tabs)
+3. **Extract metadata** — Use your intelligence to identify:
+   - Title, Author(s), Publication date, Abstract (write one if missing)
+   - Publisher or website name, Item type, **2-5 descriptive tags**
+4. **Find the right collection** — Call `list_collections`; ask user if multiple options match
+5. **Assess your confidence** — See approval rules below
+6. **Create the item** — Call `save_item` with all metadata and `pdf_url` or `snapshot_url`
+
+### After saving:
+- Use `create_note` to add your analysis or summary
+- Use `get_item` to verify the saved metadata
 
 ## Confidence-Based Approval
 
@@ -47,38 +70,19 @@ When adding a URL or document to Zotero:
 
 **Ask for approval if:**
 - Source is messy or ambiguous (government PDF, scanned document, old webpage)
-- You had to guess or infer significant metadata (author unclear, date approximate)
+- You had to guess or infer significant metadata
 - Multiple possible interpretations exist
 - No clear collection match — show options and ask
-- You wrote an abstract because none existed (let user verify it's accurate)
+- You wrote an abstract because none existed
 
 When asking, show a brief summary:
 > "I extracted: **Title**, by **Author** (Date). Abstract: ... 
 > Save to 'Collection Name'?"
 
-## Available Tools
+## Configuration
 
-- `get_zotero_help` — Get workflow instructions (call when unsure)
-- `prepare_url_for_zotero` — Start here for URLs! Returns fetch instructions (don't open tabs!)
-- `setup_zotero_step1_library_id` — First step of Zotero setup
-- `setup_zotero_step2_api_key` — Second step (validates & saves credentials)
-- `save_to_zotero` — Save an item with metadata and attachments
-- `list_zotero_collections` — Find collection IDs
-- `get_zotero_item_types` — See valid item types
-- `attach_pdf_from_url` — Add PDF to existing item
-- `attach_snapshot` — Add webpage snapshot to existing item
+The server requires two environment variables:
+- `ZOTERO_API_KEY` — Your Zotero API key
+- `ZOTERO_LIBRARY_ID` — Your Zotero user library ID
 
-## First-Time Setup / Configuration Errors
-
-If Zotero isn't configured or there's a connection error, guide the user step-by-step:
-
-**Step 1:** Call `setup_zotero_step1_library_id`
-> "I need to connect to your Zotero. What's your Library ID?  
-> Find it at https://www.zotero.org/settings/keys — look for 'Your userID for use in API calls is: XXXXXX'"
-
-**Step 2:** After step 1 succeeds, call `setup_zotero_step2_api_key`
-> "Got it! Now I need your API key. On the same page, create a new private key (check 'Allow library access'). Copy it carefully — it's only shown once!"
-
-**Step 3:** If success → confirm and proceed. If failure → suggest double-checking and retry.
-
-**Important:** Never echo the API key back to the user — treat it as a secret.
+Get both from: https://www.zotero.org/settings/keys
