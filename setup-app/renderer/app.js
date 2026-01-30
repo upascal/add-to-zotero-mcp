@@ -19,6 +19,10 @@ const btnEdit = document.getElementById("btn-edit");
 const linkKeys = document.getElementById("link-keys");
 const nodeWarning = document.getElementById("node-warning");
 const linkNode = document.getElementById("link-node");
+const btnRestartClaude = document.getElementById("btn-restart-claude");
+const restartLabel = document.getElementById("restart-label");
+const restartSpinner = document.getElementById("restart-spinner");
+const restartResult = document.getElementById("restart-result");
 
 // ---------------------------------------------------------------------------
 // Init — load existing config + system checks
@@ -204,6 +208,40 @@ btnEdit.addEventListener("click", () => {
   formView.style.display = "block";
   updateBadge.style.display = "inline-block";
   saveLabel.textContent = "Update Configuration";
+});
+
+// ---------------------------------------------------------------------------
+// Restart Claude Desktop
+// ---------------------------------------------------------------------------
+
+btnRestartClaude.addEventListener("click", async () => {
+  // Show loading
+  restartLabel.textContent = "Restarting...";
+  restartSpinner.style.display = "inline-block";
+  btnRestartClaude.disabled = true;
+  restartResult.style.display = "none";
+  restartResult.classList.remove("fade-out");
+
+  const result = await window.api.restartClaude();
+
+  // Reset button
+  restartLabel.textContent = "Restart Claude Desktop";
+  restartSpinner.style.display = "none";
+  btnRestartClaude.disabled = false;
+
+  // Show result
+  restartResult.style.display = "block";
+  if (result.success) {
+    restartResult.className = "test-result success";
+    restartResult.textContent = "Claude Desktop restarted!";
+    // Fade out after 3 seconds
+    setTimeout(() => {
+      restartResult.classList.add("fade-out");
+    }, 3000);
+  } else {
+    restartResult.className = "test-result failure";
+    restartResult.textContent = result.message || "Failed to restart Claude.";
+  }
 });
 
 // ---------------------------------------------------------------------------

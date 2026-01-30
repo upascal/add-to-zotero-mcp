@@ -7,4 +7,5 @@ contextBridge.exposeInMainWorld("api", {
   saveConfig: (apiKey, libraryId) =>
     ipcRenderer.invoke("save-config", { apiKey, libraryId }),
   openExternal: (url) => ipcRenderer.invoke("open-external", url),
+  restartClaude: () => ipcRenderer.invoke("restart-claude"),
 });

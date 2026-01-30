@@ -265,6 +265,51 @@ ipcMain.handle("open-external", (_event, url) => {
   shell.openExternal(url);
 });
 
+ipcMain.handle("restart-claude", async () => {
+  return restartClaudeDesktop();
+});
+
+/**
+ * Restart Claude Desktop — quit the app if running, then relaunch it.
+ */
+function restartClaudeDesktop() {
+  const { execSync, exec } = require("child_process");
+
+  if (process.platform === "darwin") {
+    try {
+      // Check if Claude is running
+      const running = execSync("pgrep -x Claude", { encoding: "utf-8" }).trim();
+      if (running) {
+        // Quit Claude gracefully
+        execSync("osascript -e 'tell application \"Claude\" to quit'");
+        // Wait a moment for it to fully quit
+        execSync("sleep 1");
+      }
+    } catch {
+      // pgrep returns non-zero if not running — that's fine
+    }
+
+    // Relaunch Claude
+    exec("open -a Claude", (err) => {
+      if (err) console.error("Failed to open Claude:", err);
+    });
+
+    return { success: true, message: "Claude Desktop is restarting..." };
+  } else if (process.platform === "win32") {
+    try {
+      execSync("taskkill /IM Claude.exe /F", { encoding: "utf-8" });
+    } catch {
+      // Not running
+    }
+    exec("start Claude", (err) => {
+      if (err) console.error("Failed to open Claude:", err);
+    });
+    return { success: true, message: "Claude Desktop is restarting..." };
+  } else {
+    return { success: false, message: "Restart not supported on this platform." };
+  }
+}
+
 // ---------------------------------------------------------------------------
 // App Lifecycle
 // ---------------------------------------------------------------------------

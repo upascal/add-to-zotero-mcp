@@ -1,5 +1,7 @@
 /* Reset & Base */
-*, *::before, *::after {
+*,
+*::before,
+*::after {
   box-sizing: border-box;
   margin: 0;
   padding: 0;
@@ -209,7 +211,9 @@ input.error {
 }
 
 @keyframes spin {
-  to { transform: rotate(360deg); }
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 /* Test Result */
@@ -272,7 +276,7 @@ input.error {
   margin-bottom: 6px;
 }
 
-.success-card > p {
+.success-card>p {
   font-size: 14px;
   color: #6e6e73;
   margin-bottom: 20px;
@@ -319,4 +323,27 @@ input.error {
 
 .next-steps strong {
   color: #1d1d1f;
+}
+
+/* Button Group */
+.button-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.button-group .btn-secondary {
+  margin-top: 0;
+}
+
+/* Fade out animation */
+.fade-out {
+  animation: fadeOut 0.5s ease-out forwards;
+}
+
+@keyframes fadeOut {
+  to {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
 }

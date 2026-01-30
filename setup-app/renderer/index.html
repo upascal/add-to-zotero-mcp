@@ -109,12 +109,19 @@
         <div class="next-steps">
           <h3>Next steps</h3>
           <ol>
-            <li>Quit and reopen <strong>Claude Desktop</strong></li>
+            <li>Restart Claude Desktop to load the new configuration</li>
             <li>Look for <strong>add-to-zotero</strong> in Claude's tools</li>
             <li>Ask Claude to save something to your Zotero library!</li>
           </ol>
         </div>
-        <button id="btn-edit" class="btn btn-secondary">Edit Configuration</button>
+        <div class="button-group">
+          <button id="btn-restart-claude" class="btn btn-primary">
+            <span id="restart-label">Restart Claude Desktop</span>
+            <span id="restart-spinner" class="spinner" style="display: none;"></span>
+          </button>
+          <button id="btn-edit" class="btn btn-secondary">Edit Configuration</button>
+        </div>
+        <div id="restart-result" class="test-result" style="display: none;"></div>
       </div>
     </div>
   </div>
