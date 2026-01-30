@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="220" height="50">
+  <rect width="220" height="50" rx="10" ry="10" fill="#0078D4"/>
+  <g transform="translate(16, 14)">
+    <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
+      <path d="M0 3.01L8.955 1.776V10.408H0V3.01Z" fill="white"/>
+      <path d="M9.95 1.622L21.538 0V10.408H9.95V1.622Z" fill="white"/>
+      <path d="M0 11.308H8.955V19.94L0 18.706V11.308Z" fill="white"/>
+      <path d="M9.95 11.308H21.538V21.716L9.95 20.094V11.308Z" fill="white"/>
+    </svg>
+  </g>
+  <text x="132" y="31" text-anchor="middle" fill="white" font-family="system-ui, Segoe UI, sans-serif" font-size="15" font-weight="500">Download for Windows</text>
+</svg>

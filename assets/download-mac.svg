@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="220" height="50">
+  <rect width="220" height="50" rx="10" ry="10" fill="#1a1a1a"/>
+  <g transform="translate(16, 13)">
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+      <path d="M18.71 19.5C17.88 20.74 17 21.95 15.66 21.97C14.32 22 13.89 21.18 12.37 21.18C10.84 21.18 10.37 21.95 9.1 22C7.79 22.05 6.8 20.68 5.96 19.47C4.25 16.56 2.93 11.3 4.7 7.72C5.57 5.94 7.36 4.86 9.28 4.84C10.56 4.81 11.78 5.7 12.58 5.7C13.38 5.7 14.86 4.62 16.42 4.78C17.09 4.81 18.93 5.05 20.12 6.72C20.02 6.78 17.58 8.21 17.61 11.14C17.65 14.62 20.66 15.74 20.7 15.75C20.67 15.83 20.2 17.46 19.09 19.13L18.71 19.5Z" fill="white"/>
+      <path d="M15.53 2.56C14.86 3.36 13.78 3.98 12.69 3.89C12.56 2.8 13.1 1.64 13.72 0.92C14.42 0.11 15.58 -0.44 16.56 -0.5C16.67 0.64 16.21 1.76 15.53 2.56Z" fill="white" transform="translate(0, 3)"/>
+    </svg>
+  </g>
+  <text x="130" y="31" text-anchor="middle" fill="white" font-family="system-ui, -apple-system, sans-serif" font-size="15" font-weight="500">Download for macOS</text>
+</svg>

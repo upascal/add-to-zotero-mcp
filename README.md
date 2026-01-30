@@ -18,10 +18,8 @@ A Node.js MCP server that lets Claude **read, write, and manage** items in your 
 
 ### Download (Recommended)
 
-Download the latest release for your platform from the [Releases page](../../releases):
-
-- **macOS** — `.dmg` installer
-- **Windows** — `.exe` installer
+[![Download for macOS](assets/download-mac.svg)](../../releases/latest/download/Add-to-Zotero-Setup.dmg)
+[![Download for Windows](assets/download-windows.svg)](../../releases/latest/download/Add-to-Zotero-Setup.exe)
 
 Run the setup app, enter your Zotero API credentials, and it will configure Claude Desktop automatically.
 
