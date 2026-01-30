@@ -90,6 +90,6 @@ Add a helper `formatItemSummary(rawItem)` to extract a clean summary object from
 
 ## What We're NOT Doing
 - No semantic search / embeddings — that's a separate project
-- No item creation/update from the read tools — existing save tools handle that
+- No item creation tools from the read tools — existing save tools handle that
 - No full PDF binary download — just the extracted text via Zotero's fulltext API
-- No annotation support yet — can add later
+- No annotation support yet — would love to add later
