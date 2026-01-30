@@ -1,6 +1,6 @@
 {
   "name": "add-to-zotero-setup",
-  "version": "1.0.0",
+  "version": "0.1.0",
   "description": "Setup wizard for Add to Zotero MCP Server",
   "main": "main.js",
   "scripts": {
