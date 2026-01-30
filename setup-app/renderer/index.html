@@ -23,6 +23,13 @@
       </div>
     </header>
 
+    <!-- System Warning (shown if Node.js not found) -->
+    <div id="node-warning" class="warning" style="display: none;">
+      <strong>Node.js not found.</strong>
+      Claude Desktop needs Node.js to run the MCP server.
+      <a href="#" id="link-node" class="link">Install Node.js</a>
+    </div>
+
     <!-- Form View -->
     <div id="form-view">
       <div id="update-badge" class="badge badge-info" style="display: none;">
@@ -81,30 +88,13 @@
         <div id="test-result" class="test-result" style="display: none;"></div>
       </div>
 
-      <!-- Step 3: Claude Desktop -->
-      <div class="step">
-        <div class="step-header">
-          <span class="step-number">3</span>
-          <div>
-            <h2>Configure Claude Desktop</h2>
-            <p class="step-help">
-              Automatically add the MCP server to Claude Desktop's configuration.
-            </p>
-          </div>
-        </div>
-        <label class="toggle-row">
-          <input type="checkbox" id="configure-claude" checked>
-          <span class="toggle-label">Update Claude Desktop config</span>
-        </label>
-        <div id="claude-status" class="claude-status"></div>
-      </div>
-
       <!-- Save -->
       <div class="actions">
         <button id="btn-save" class="btn btn-primary" disabled>
-          <span id="save-label">Save Configuration</span>
+          <span id="save-label">Save & Configure Claude Desktop</span>
           <span id="save-spinner" class="spinner" style="display: none;"></span>
         </button>
+        <p class="save-hint">Writes your credentials to Claude Desktop's config file.</p>
         <div id="save-error" class="field-error"></div>
       </div>
     </div>
@@ -114,12 +104,12 @@
       <div class="success-card">
         <div class="success-icon">&#10003;</div>
         <h2>You're all set!</h2>
-        <p>Your Zotero credentials have been saved.</p>
+        <p>Claude Desktop has been configured with your Zotero credentials.</p>
         <div id="success-details" class="success-details"></div>
         <div class="next-steps">
           <h3>Next steps</h3>
           <ol>
-            <li>Quit and reopen Claude Desktop</li>
+            <li>Quit and reopen <strong>Claude Desktop</strong></li>
             <li>Look for <strong>add-to-zotero</strong> in Claude's tools</li>
             <li>Ask Claude to save something to your Zotero library!</li>
           </ol>

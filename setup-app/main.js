@@ -4,9 +4,56 @@ const fs = require("fs");
 const https = require("https");
 const os = require("os");
 
-// The MCP project root is one level up from this app
-const PROJECT_ROOT = path.resolve(__dirname, "..");
-const ENV_FILE = path.join(PROJECT_ROOT, ".env");
+// ---------------------------------------------------------------------------
+// Server path — the Node.js MCP server bundled alongside this app
+// ---------------------------------------------------------------------------
+
+/**
+ * Resolve the path to the bundled server/index.js.
+ *
+ * In development:  setup-app/../server/index.js
+ * When packaged:   the server/ folder is included in extraResources
+ *                  and lands at process.resourcesPath + "/server"
+ */
+function getServerDir() {
+  if (app.isPackaged) {
+    return path.join(process.resourcesPath, "server");
+  }
+  // Dev mode — server/ is a sibling folder
+  return path.resolve(__dirname, "..", "server");
+}
+
+function getServerIndexPath() {
+  return path.join(getServerDir(), "index.js");
+}
+
+// ---------------------------------------------------------------------------
+// Settings persistence — stored in the app's own data directory
+// ---------------------------------------------------------------------------
+
+function getSettingsDir() {
+  const dir = app.getPath("userData"); // e.g. ~/Library/Application Support/add-to-zotero-setup
+  if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+  return dir;
+}
+
+function getSettingsPath() {
+  return path.join(getSettingsDir(), "settings.json");
+}
+
+function readSettings() {
+  const p = getSettingsPath();
+  if (!fs.existsSync(p)) return {};
+  try {
+    return JSON.parse(fs.readFileSync(p, "utf-8"));
+  } catch {
+    return {};
+  }
+}
+
+function writeSettings(settings) {
+  fs.writeFileSync(getSettingsPath(), JSON.stringify(settings, null, 2), "utf-8");
+}
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -39,29 +86,8 @@ function getClaudeConfigPath() {
   }
 }
 
-function readEnvFile() {
-  if (!fs.existsSync(ENV_FILE)) return {};
-  const content = fs.readFileSync(ENV_FILE, "utf-8");
-  const result = {};
-  for (const line of content.split("\n")) {
-    const trimmed = line.trim();
-    if (!trimmed || trimmed.startsWith("#")) continue;
-    const eqIndex = trimmed.indexOf("=");
-    if (eqIndex === -1) continue;
-    const key = trimmed.slice(0, eqIndex).trim();
-    const value = trimmed.slice(eqIndex + 1).trim();
-    result[key] = value;
-  }
-  return result;
-}
-
-function writeEnvFile(apiKey, libraryId) {
-  const content = `ZOTERO_API_KEY=${apiKey}\nZOTERO_LIBRARY_ID=${libraryId}\n`;
-  fs.writeFileSync(ENV_FILE, content, "utf-8");
-}
-
 function testZoteroConnection(apiKey, libraryId) {
-  return new Promise((resolve, reject) => {
+  return new Promise((resolve) => {
     const options = {
       hostname: "api.zotero.org",
       path: `/users/${libraryId}/collections?limit=1`,
@@ -110,23 +136,17 @@ function testZoteroConnection(apiKey, libraryId) {
   });
 }
 
-function configureClaude(apiKey, libraryId) {
+function configureClaudeDesktop(apiKey, libraryId) {
   const configPath = getClaudeConfigPath();
   if (!configPath) {
     return { success: false, error: "Unsupported platform." };
   }
 
-  // Determine the Python executable path
-  let pythonCmd;
-  if (process.platform === "win32") {
-    pythonCmd = path.join(PROJECT_ROOT, ".venv", "Scripts", "python.exe");
-  } else {
-    pythonCmd = path.join(PROJECT_ROOT, ".venv", "bin", "python");
-  }
+  const serverIndex = getServerIndexPath();
 
   const serverConfig = {
-    command: pythonCmd,
-    args: [path.join(PROJECT_ROOT, "server.py")],
+    command: "node",
+    args: [serverIndex],
     env: {
       ZOTERO_API_KEY: apiKey,
       ZOTERO_LIBRARY_ID: libraryId,
@@ -138,7 +158,6 @@ function configureClaude(apiKey, libraryId) {
     if (fs.existsSync(configPath)) {
       config = JSON.parse(fs.readFileSync(configPath, "utf-8"));
     } else {
-      // Create parent directory if it doesn't exist
       fs.mkdirSync(path.dirname(configPath), { recursive: true });
     }
 
@@ -155,6 +174,19 @@ function configureClaude(apiKey, libraryId) {
   }
 }
 
+/**
+ * Check if Node.js is available on the system.
+ */
+function checkNodeAvailable() {
+  const { execSync } = require("child_process");
+  try {
+    const version = execSync("node --version", { encoding: "utf-8" }).trim();
+    return { available: true, version };
+  } catch {
+    return { available: false, version: null };
+  }
+}
+
 // ---------------------------------------------------------------------------
 // Window
 // ---------------------------------------------------------------------------
@@ -162,10 +194,10 @@ function configureClaude(apiKey, libraryId) {
 function createWindow() {
   const win = new BrowserWindow({
     width: 600,
-    height: 720,
+    height: 680,
     resizable: true,
     minWidth: 480,
-    minHeight: 600,
+    minHeight: 560,
     title: "Add to Zotero — Setup",
     webPreferences: {
       preload: path.join(__dirname, "preload.js"),
@@ -188,16 +220,22 @@ function createWindow() {
 // ---------------------------------------------------------------------------
 
 ipcMain.handle("get-status", () => {
-  const env = readEnvFile();
+  const settings = readSettings();
   const claudePath = getClaudeConfigPath();
   const claudeExists = claudePath ? fs.existsSync(claudePath) : false;
+  const nodeCheck = checkNodeAvailable();
+  const serverExists = fs.existsSync(getServerIndexPath());
 
   return {
-    apiKey: env.ZOTERO_API_KEY || "",
-    libraryId: env.ZOTERO_LIBRARY_ID || "",
-    hasExistingConfig: !!(env.ZOTERO_API_KEY && env.ZOTERO_LIBRARY_ID),
+    apiKey: settings.apiKey || "",
+    libraryId: settings.libraryId || "",
+    hasExistingConfig: !!(settings.apiKey && settings.libraryId),
     claudeConfigExists: claudeExists,
     claudeConfigPath: claudePath || "",
+    nodeAvailable: nodeCheck.available,
+    nodeVersion: nodeCheck.version,
+    serverBundled: serverExists,
+    serverPath: getServerIndexPath(),
   };
 });
 
@@ -205,30 +243,23 @@ ipcMain.handle("test-connection", async (_event, { apiKey, libraryId }) => {
   return testZoteroConnection(apiKey, libraryId);
 });
 
-ipcMain.handle(
-  "save-config",
-  async (_event, { apiKey, libraryId, configureClaude: shouldConfigClaude }) => {
-    try {
-      // Write .env
-      writeEnvFile(apiKey, libraryId);
-      const result = { success: true, envWritten: true };
+ipcMain.handle("save-config", async (_event, { apiKey, libraryId }) => {
+  try {
+    // Save settings for pre-filling the form next time
+    writeSettings({ apiKey, libraryId });
 
-      // Optionally configure Claude Desktop
-      if (shouldConfigClaude) {
-        const claudeResult = configureClaude(apiKey, libraryId);
-        result.claudeConfigured = claudeResult.success;
-        result.claudeConfigPath = claudeResult.path || "";
-        if (!claudeResult.success) {
-          result.claudeError = claudeResult.error;
-        }
-      }
+    // Configure Claude Desktop
+    const claudeResult = configureClaudeDesktop(apiKey, libraryId);
 
-      return result;
-    } catch (err) {
-      return { success: false, error: err.message };
-    }
+    return {
+      success: claudeResult.success,
+      claudeConfigPath: claudeResult.path || "",
+      error: claudeResult.error || null,
+    };
+  } catch (err) {
+    return { success: false, error: err.message };
   }
-);
+});
 
 ipcMain.handle("open-external", (_event, url) => {
   shell.openExternal(url);

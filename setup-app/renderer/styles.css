@@ -181,6 +181,23 @@ input.error {
   background: #d2d2d7;
 }
 
+/* Warning banner */
+.warning {
+  background: #fff3cd;
+  border: 1px solid #ffc107;
+  color: #856404;
+  border-radius: 10px;
+  padding: 14px 18px;
+  font-size: 13px;
+  margin-bottom: 20px;
+  line-height: 1.6;
+}
+
+.warning strong {
+  display: block;
+  margin-bottom: 2px;
+}
+
 /* Spinner */
 .spinner {
   width: 16px;
@@ -214,34 +231,15 @@ input.error {
   color: #cc1a1a;
 }
 
-/* Toggle */
-.toggle-row {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  cursor: pointer;
-}
-
-.toggle-row input[type="checkbox"] {
-  width: 18px;
-  height: 18px;
-  accent-color: #CC2936;
-  cursor: pointer;
-}
-
-.toggle-label {
-  font-size: 14px;
-  font-weight: 500;
-}
-
-.claude-status {
-  font-size: 12px;
-  color: #86868b;
+/* Actions */
+.actions {
   margin-top: 8px;
 }
 
-/* Actions */
-.actions {
+.save-hint {
+  font-size: 12px;
+  color: #86868b;
+  text-align: center;
   margin-top: 8px;
 }
 

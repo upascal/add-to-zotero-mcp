@@ -17,8 +17,16 @@
       "preload.js",
       "renderer/**/*"
     ],
+    "extraResources": [
+      {
+        "from": "../server",
+        "to": "server",
+        "filter": ["**/*", "!node_modules"]
+      }
+    ],
     "mac": {
-      "target": "dmg"
+      "target": "dmg",
+      "identity": null
     },
     "win": {
       "target": "nsis"

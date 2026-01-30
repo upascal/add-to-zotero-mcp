@@ -6,7 +6,12 @@
       "Bash(/Users/vibes/Documents/Development/Projects/add-to-zotero-mcp/.venv/bin/python:*)",
       "Bash(python:*)",
       "Bash(.venv/bin/python:*)",
-      "Bash(npm install:*)"
+      "Bash(npm install:*)",
+      "WebFetch(domain:raw.githubusercontent.com)",
+      "Bash(node:*)",
+      "WebFetch(domain:github.com)",
+      "WebFetch(domain:www.zotero.org)",
+      "WebFetch(domain:pyzotero.readthedocs.io)"
     ]
   }
 }

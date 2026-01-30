@@ -7,8 +7,6 @@ const btnTest = document.getElementById("btn-test");
 const testLabel = document.getElementById("test-label");
 const testSpinner = document.getElementById("test-spinner");
 const testResult = document.getElementById("test-result");
-const configureClaudeCheckbox = document.getElementById("configure-claude");
-const claudeStatus = document.getElementById("claude-status");
 const btnSave = document.getElementById("btn-save");
 const saveLabel = document.getElementById("save-label");
 const saveSpinner = document.getElementById("save-spinner");
@@ -19,26 +17,27 @@ const successView = document.getElementById("success-view");
 const successDetails = document.getElementById("success-details");
 const btnEdit = document.getElementById("btn-edit");
 const linkKeys = document.getElementById("link-keys");
+const nodeWarning = document.getElementById("node-warning");
+const linkNode = document.getElementById("link-node");
 
 // ---------------------------------------------------------------------------
-// Init — load existing config
+// Init — load existing config + system checks
 // ---------------------------------------------------------------------------
 
 async function init() {
   const status = await window.api.getStatus();
 
+  // Check Node.js availability
+  if (!status.nodeAvailable) {
+    nodeWarning.style.display = "block";
+  }
+
+  // Pre-fill if existing config
   if (status.hasExistingConfig) {
     libraryIdInput.value = status.libraryId;
     apiKeyInput.value = status.apiKey;
     updateBadge.style.display = "inline-block";
     saveLabel.textContent = "Update Configuration";
-  }
-
-  if (status.claudeConfigExists) {
-    claudeStatus.textContent = "Claude Desktop config file found.";
-  } else {
-    claudeStatus.textContent =
-      "Claude Desktop config not found — it will be created.";
   }
 
   updateButtons();
@@ -78,7 +77,9 @@ function validateApiKey() {
 }
 
 function isFormValid() {
-  const libOk = libraryIdInput.value.trim() && /^\d+$/.test(libraryIdInput.value.trim());
+  const libOk =
+    libraryIdInput.value.trim() &&
+    /^\d+$/.test(libraryIdInput.value.trim());
   const keyOk = apiKeyInput.value.trim().length > 0;
   return libOk && keyOk;
 }
@@ -132,13 +133,14 @@ btnTest.addEventListener("click", async () => {
   // Reset button
   testLabel.textContent = "Test Connection";
   testSpinner.style.display = "none";
-  btnTest.disabled = !isFormValid();
+  updateButtons();
 
   // Show result
   testResult.style.display = "block";
   if (result.success) {
     testResult.className = "test-result success";
-    testResult.textContent = "Connected successfully! Your credentials are valid.";
+    testResult.textContent =
+      "Connected successfully! Your credentials are valid.";
   } else {
     testResult.className = "test-result failure";
     testResult.textContent = result.error || "Connection failed.";
@@ -152,8 +154,8 @@ btnTest.addEventListener("click", async () => {
 btnSave.addEventListener("click", async () => {
   if (!isFormValid()) return;
 
-  // Final validation
-  if (!validateLibraryId() || !validateApiKey()) return;
+  validateLibraryId();
+  validateApiKey();
 
   // Show loading
   saveLabel.textContent = "Saving...";
@@ -163,16 +165,16 @@ btnSave.addEventListener("click", async () => {
 
   const result = await window.api.saveConfig(
     apiKeyInput.value.trim(),
-    libraryIdInput.value.trim(),
-    configureClaudeCheckbox.checked
+    libraryIdInput.value.trim()
   );
 
   // Reset button
-  saveLabel.textContent = updateBadge.style.display !== "none"
-    ? "Update Configuration"
-    : "Save Configuration";
+  saveLabel.textContent =
+    updateBadge.style.display !== "none"
+      ? "Update Configuration"
+      : "Save & Configure Claude Desktop";
   saveSpinner.style.display = "none";
-  btnSave.disabled = !isFormValid();
+  updateButtons();
 
   if (result.success) {
     showSuccess(result);
@@ -189,11 +191,10 @@ function showSuccess(result) {
   formView.style.display = "none";
   successView.style.display = "block";
 
-  let details = "<p>.env file written.</p>";
-  if (result.claudeConfigured) {
-    details += `<p>Claude Desktop configured.</p>`;
-  } else if (result.claudeError) {
-    details += `<p>Claude Desktop config: ${result.claudeError}</p>`;
+  let details = "";
+  if (result.claudeConfigPath) {
+    details += `<p>Claude Desktop config updated at:</p>`;
+    details += `<p><strong>${result.claudeConfigPath}</strong></p>`;
   }
   successDetails.innerHTML = details;
 }
@@ -206,10 +207,15 @@ btnEdit.addEventListener("click", () => {
 });
 
 // ---------------------------------------------------------------------------
-// External link
+// External links
 // ---------------------------------------------------------------------------
 
 linkKeys.addEventListener("click", (e) => {
   e.preventDefault();
   window.api.openExternal("https://www.zotero.org/settings/keys");
+});
+
+linkNode.addEventListener("click", (e) => {
+  e.preventDefault();
+  window.api.openExternal("https://nodejs.org/");
 });

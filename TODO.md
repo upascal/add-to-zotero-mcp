@@ -22,3 +22,20 @@
   - Implement OAuth flow in server
 - [ ] Publish to Claude Connectors Directory
 - [ ] One-liner install script (curl)
+
+
+### UI 
+- add or remove tools from the UI 
+- create custom workflows (ie whether or not abstract is required or tags etc)
+- dark mode support
+- 
+
+## Long term
+- add support for Zotero groups
+- add support for reading and summarizing PDFs
+- add support for notes / annotations
+
+
+## Remote MCP Server
+- add support for remote MCP server
+

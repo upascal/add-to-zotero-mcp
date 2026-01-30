@@ -3,6 +3,9 @@
 __pycache__/
 *.pyc
 
+# Node.js MCP server
+server/node_modules/
+
 # Electron setup app
 setup-app/node_modules/
 setup-app/dist/
