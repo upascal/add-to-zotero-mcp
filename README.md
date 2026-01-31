@@ -1,7 +1,3 @@
-<p align="center">
-  <img src="readme-assets/icon.png" width="128" alt="Add to Zotero icon" />
-</p>
-
 # Add to Zotero — MCP Server
 
 A Node.js MCP server that lets Claude **read, write, and manage** items in your Zotero library. Built for non-standard sources — primary documents, government PDFs, obscure webpages — where Claude acts as the intelligence layer for metadata extraction.
@@ -20,20 +16,29 @@ A Node.js MCP server that lets Claude **read, write, and manage** items in your 
 
 ## Installation
 
-### Download (Recommended)
+### Downloaded Setup App (Recommended)
 
-<p align="center">
-  <img src="readme-assets/ConfigureZotero.png" width="400" alt="Setup form" />
-  <img src="readme-assets/SuccessfulConfiguration.png" width="400" alt="Setup success" />
-</p>
-
-Run the setup app, enter your Zotero API credentials, and it will configure Claude Desktop automatically.
-
-1. Open the setup app from `setup-app/`
+1. Download the latest release
 2. Enter your Zotero API credentials
 3. Click **Test Connection** to verify
 4. Click **Save & Configure Claude Desktop**
 5. Click **Restart Claude Desktop** to load the new configuration
+
+#### Setup App Download Links
+
+[![Download for macOS](assets/download-mac.svg)](../../releases/latest/download/Add-to-Zotero-Setup.dmg)
+[![Download for Windows](assets/download-windows.svg)](../../releases/latest/download/Add-to-Zotero-Setup.exe)
+
+#### Configure Setup App
+
+<p align="center">
+  <img src="assets/ConfigureZotero.png" width="400" alt="Setup form" />
+  <img src="assets/SuccessfulConfiguration.png" width="400" alt="Setup success" />
+</p>
+
+Run the setup app, enter your Zotero API credentials, and it will configure Claude Desktop automatically.
+
+
 
 ### Manual Setup
 
@@ -89,7 +94,7 @@ Once connected, you can ask Claude to:
 - "Add a summary note to this item"
 - "Tag this item with 'important' and 'to-read'"
 
-## Available Tools (14)
+## Available Tools
 
 ### Search & Browse
 | Tool | Description |
