@@ -32,9 +32,10 @@
         ]
       }
     ],
+    "afterPack": "./scripts/afterPack.js",
     "mac": {
       "target": "dmg",
-      "identity": "-",
+      "identity": null,
       "icon": "../assets/icon/icon.icns",
       "artifactName": "Zotero-Assistant-Setup.${ext}"
     },
