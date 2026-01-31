@@ -24,7 +24,7 @@ A Node.js MCP server that lets Claude Desktop **read, write, and manage** items 
 4. Click **Save & Configure Claude Desktop**
 5. Click **Restart Claude Desktop** to load the new configuration
 
-#### Setup App Download Links
+#### Zotero Assistant Setup App Download Links
 
 [![Download for macOS](assets/download-mac.svg)](../../releases/latest/download/Zotero-Assistant-Setup.dmg)    [![Download for Windows](assets/download-windows.svg)](../../releases/latest/download/Zotero-Assistant-Setup.exe)
 
