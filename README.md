@@ -27,7 +27,24 @@ A Node.js MCP server that lets Claude Desktop **read, write, and manage** items 
 #### Setup App Download Links
 
 [![Download for macOS](assets/download-mac.svg)](../../releases/latest/download/Zotero-Assistant-Setup.dmg)
+
 [![Download for Windows](assets/download-windows.svg)](../../releases/latest/download/Zotero-Assistant-Setup.exe)
+
+#### MacOS Instructions
+
+Since this app is not signed with an Apple Developer certificate, macOS will show a security warning the first time you open it. To allow the app to run:
+
+1. Open the DMG and drag the app to your **Applications** folder
+2. Try to open the app — you'll see a warning that Apple cannot verify it
+3. Go to **System Settings** → **Privacy & Security**
+4. Scroll down until you see the message about "Zotero Assistant Setup" being blocked
+5. Click **Open Anyway**
+
+<p align="center">
+  <img src="assets/MacOS-privacy-settings.png" width="500" alt="macOS Privacy & Security settings showing Open Anyway button" />
+</p>
+
+You only need to do this once. After that, the app will open normally.
 
 #### Configure Setup App
 
