@@ -249,16 +249,30 @@ export async function attachPdfFromUrl(apiKey, libraryId, parentItemKey, pdfUrl,
   pdfUrl = unwrapUrl(pdfUrl);
 
   try {
+    console.error(`[attach_pdf] Fetching PDF from: ${pdfUrl}`);
     const response = await fetch(pdfUrl, {
       headers: { "User-Agent": "Mozilla/5.0 (compatible; AddToZoteroMCP/1.0)" },
       signal: AbortSignal.timeout(60000),
     });
 
     if (!response.ok) {
-      return { success: false, error: `Failed to download PDF: HTTP ${response.status}` };
+      return { success: false, error: `Failed to download PDF: HTTP ${response.status} ${response.statusText}` };
     }
 
+    const contentType = response.headers.get("content-type") || "";
+    console.error(`[attach_pdf] Response content-type: ${contentType}, status: ${response.status}`);
+
     const buffer = Buffer.from(await response.arrayBuffer());
+
+    if (buffer.length === 0) {
+      return { success: false, error: "Downloaded PDF is empty (0 bytes)" };
+    }
+
+    // Warn if content-type doesn't look like a PDF
+    const isPdfContent = contentType.includes("pdf") || contentType.includes("octet-stream");
+    if (!isPdfContent) {
+      console.error(`[attach_pdf] Warning: content-type "${contentType}" may not be a PDF. Buffer size: ${buffer.length}`);
+    }
 
     // Determine filename
     if (!filename) {
@@ -270,6 +284,8 @@ export async function attachPdfFromUrl(apiKey, libraryId, parentItemKey, pdfUrl,
         if (!filename.endsWith(".pdf")) filename = "attachment.pdf";
       }
     }
+
+    console.error(`[attach_pdf] Creating attachment item: ${filename} (${buffer.length} bytes)`);
 
     // Upload via Zotero API
     const zot = zotClient(apiKey, libraryId);
@@ -286,17 +302,36 @@ export async function attachPdfFromUrl(apiKey, libraryId, parentItemKey, pdfUrl,
     const attachmentItem = createResp.getEntityByIndex(0);
 
     if (!attachmentItem) {
-      return { success: false, error: "Failed to create attachment item" };
+      const rawResp = JSON.stringify(createResp.raw || createResp);
+      return { success: false, error: `Failed to create attachment item. API response: ${rawResp}` };
     }
 
+    console.error(`[attach_pdf] Attachment item created: ${attachmentItem.key}. Uploading file content...`);
+
     // Upload the file content
-    await zot
+    const uploadResp = await zot
       .items(attachmentItem.key)
       .attachment(filename, buffer, "application/pdf")
       .post();
 
-    return { success: true, filename, size_bytes: buffer.length };
+    // Check upload response
+    const uploadStatus = uploadResp?.response?.status || uploadResp?.status;
+    const uploadOk = uploadResp?.response?.ok ?? uploadResp?.ok;
+    console.error(`[attach_pdf] Upload response status: ${uploadStatus}, ok: ${uploadOk}`);
+
+    if (uploadOk === false) {
+      const uploadBody = JSON.stringify(uploadResp?.raw || uploadResp?.getData?.() || "unknown");
+      return {
+        success: false,
+        error: `Attachment item created (${attachmentItem.key}) but file upload failed. Status: ${uploadStatus}. Response: ${uploadBody}`,
+        attachment_key: attachmentItem.key,
+      };
+    }
+
+    console.error(`[attach_pdf] Successfully attached ${filename} to ${parentItemKey}`);
+    return { success: true, filename, size_bytes: buffer.length, attachment_key: attachmentItem.key };
   } catch (err) {
+    console.error(`[attach_pdf] Error: ${err.message}\n${err.stack}`);
     return { success: false, error: `Failed to attach PDF: ${err.message}` };
   }
 }
@@ -308,22 +343,43 @@ export async function attachSnapshot(apiKey, libraryId, parentItemKey, url, titl
   url = unwrapUrl(url);
 
   try {
+    console.error(`[attach_snapshot] Fetching page: ${url}`);
     const response = await fetch(url, {
       headers: { "User-Agent": "Mozilla/5.0 (compatible; AddToZoteroMCP/1.0)" },
       signal: AbortSignal.timeout(60000),
     });
 
     if (!response.ok) {
-      return { success: false, error: `Failed to fetch page: HTTP ${response.status}` };
+      return { success: false, error: `Failed to fetch page: HTTP ${response.status} ${response.statusText}` };
+    }
+
+    const contentType = response.headers.get("content-type") || "";
+    const finalUrl = response.url; // capture after redirects
+    console.error(`[attach_snapshot] Response status: ${response.status}, content-type: ${contentType}, final URL: ${finalUrl}`);
+
+    if (response.redirected) {
+      console.error(`[attach_snapshot] Redirected from ${url} to ${finalUrl}`);
     }
 
     const html = await response.text();
+
+    if (!html || html.length === 0) {
+      return { success: false, error: "Fetched page is empty (0 bytes)" };
+    }
+
+    // Check if we got actual HTML content vs a login page or error
+    const isHtml = contentType.includes("html") || html.trim().startsWith("<") || html.trim().startsWith("<!DOCTYPE");
+    if (!isHtml) {
+      console.error(`[attach_snapshot] Warning: response may not be HTML. Content-type: "${contentType}", first 200 chars: ${html.slice(0, 200)}`);
+    }
 
     // Determine title
     if (!title) {
       const match = html.match(/<title[^>]*>([\s\S]*?)<\/title>/i);
       title = match ? match[1].trim() : url;
     }
+
+    console.error(`[attach_snapshot] Page title: "${title}", HTML size: ${html.length} bytes`);
 
     const safeName = title.replace(/[^\w\s\-.]/g, "").slice(0, 80).trim() || "snapshot";
     const filename = `${safeName}.html`;
@@ -340,20 +396,40 @@ export async function attachSnapshot(apiKey, libraryId, parentItemKey, url, titl
       filename,
     };
 
+    console.error(`[attach_snapshot] Creating attachment item: ${filename}`);
     const createResp = await zot.items().post([attachmentTemplate]);
     const attachmentItem = createResp.getEntityByIndex(0);
 
     if (!attachmentItem) {
-      return { success: false, error: "Failed to create attachment item" };
+      const rawResp = JSON.stringify(createResp.raw || createResp);
+      return { success: false, error: `Failed to create attachment item. API response: ${rawResp}` };
     }
 
-    await zot
+    console.error(`[attach_snapshot] Attachment item created: ${attachmentItem.key}. Uploading HTML content (${buffer.length} bytes)...`);
+
+    const uploadResp = await zot
       .items(attachmentItem.key)
       .attachment(filename, buffer, "text/html")
       .post();
 
-    return { success: true, filename, title, size_bytes: buffer.length };
+    // Check upload response
+    const uploadStatus = uploadResp?.response?.status || uploadResp?.status;
+    const uploadOk = uploadResp?.response?.ok ?? uploadResp?.ok;
+    console.error(`[attach_snapshot] Upload response status: ${uploadStatus}, ok: ${uploadOk}`);
+
+    if (uploadOk === false) {
+      const uploadBody = JSON.stringify(uploadResp?.raw || uploadResp?.getData?.() || "unknown");
+      return {
+        success: false,
+        error: `Attachment item created (${attachmentItem.key}) but file upload failed. Status: ${uploadStatus}. Response: ${uploadBody}`,
+        attachment_key: attachmentItem.key,
+      };
+    }
+
+    console.error(`[attach_snapshot] Successfully attached snapshot to ${parentItemKey}`);
+    return { success: true, filename, title, size_bytes: buffer.length, attachment_key: attachmentItem.key };
   } catch (err) {
+    console.error(`[attach_snapshot] Error: ${err.message}\n${err.stack}`);
     return { success: false, error: `Failed to attach snapshot: ${err.message}` };
   }
 }
@@ -533,6 +609,50 @@ export async function getRecentItems(apiKey, libraryId, { limit = 10, sort = "da
     return { items };
   } catch (err) {
     return { error: err.message };
+  }
+}
+
+// -------------------------------------------------------------------------
+// Collections
+// -------------------------------------------------------------------------
+
+/**
+ * Create a new collection (folder) in the library.
+ */
+export async function createCollection(apiKey, libraryId, name, parentCollectionId) {
+  if (!name || !name.trim()) {
+    return { success: false, error: "Collection name is required" };
+  }
+
+  const zot = zotClient(apiKey, libraryId);
+  const data = { name: name.trim() };
+  if (parentCollectionId) {
+    data.parentCollection = parentCollectionId;
+  }
+
+  try {
+    console.error(`[create_collection] Creating collection: "${data.name}"${parentCollectionId ? ` under parent ${parentCollectionId}` : " (top-level)"}`);
+
+    const response = await zot.collections().post([data]);
+    const created = response.getEntityByIndex(0);
+
+    if (!created) {
+      const rawResp = JSON.stringify(response.raw || response);
+      console.error(`[create_collection] Failed. API response: ${rawResp}`);
+      return { success: false, error: `Failed to create collection. API response: ${rawResp}` };
+    }
+
+    console.error(`[create_collection] Created collection: ${created.key}`);
+    return {
+      success: true,
+      collection_key: created.key,
+      name: data.name,
+      parent: parentCollectionId || null,
+      message: `Created collection: ${data.name}`,
+    };
+  } catch (err) {
+    console.error(`[create_collection] Error: ${err.message}\n${err.stack}`);
+    return { success: false, error: `Failed to create collection: ${err.message}` };
   }
 }
 

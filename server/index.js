@@ -30,6 +30,7 @@ import {
   getRecentItems,
   createNote,
   updateItem,
+  createCollection,
 } from "./zotero.js";
 
 // -------------------------------------------------------------------------
@@ -99,6 +100,7 @@ server.registerTool(
           "get_collection_items — List items in a specific collection",
           "get_recent_items — Recently added/modified items",
           "list_collections — All collections (folders)",
+          "create_collection — Create a new collection (folder)",
           "list_tags — All tags in library",
         ],
         read: [
@@ -296,6 +298,38 @@ server.registerTool(
     } catch (err) {
       return { content: [{ type: "text", text: JSON.stringify({ error: err.message }) }] };
     }
+  }
+);
+
+// -- create_collection ----------------------------------------------------
+
+server.registerTool(
+  "create_collection",
+  {
+    title: "Create Collection",
+    description:
+      "Create a new collection (folder) in the Zotero library. " +
+      "Optionally nest it under an existing collection by providing a parent ID.",
+    inputSchema: {
+      name: z.string().describe("Name for the new collection"),
+      parent_collection_id: z
+        .string()
+        .optional()
+        .describe("Parent collection key to nest under (from list_collections). Omit for top-level."),
+    },
+  },
+  async ({ name, parent_collection_id }) => {
+    const { apiKey, libraryId } = getCredentials();
+    const result = await createCollection(apiKey, libraryId, name, parent_collection_id);
+
+    if (result.success) {
+      result.nextSteps = [
+        `Use collection_id '${result.collection_key}' when calling save_item`,
+        "Use list_collections to verify it appears",
+      ];
+    }
+
+    return { content: [{ type: "text", text: JSON.stringify(result, null, 2) }] };
   }
 );
 

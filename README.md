@@ -1,22 +1,33 @@
+<p align="center">
+  <img src="readme-assets/icon.png" width="128" alt="Add to Zotero icon" />
+</p>
+
 # Add to Zotero — MCP Server
 
-A Node.js MCP server that lets Claude save items to your Zotero library. Built for non-standard sources — primary documents, government PDFs, obscure webpages — where Claude acts as the intelligence layer for metadata extraction.
+A Node.js MCP server that lets Claude **read, write, and manage** items in your Zotero library. Built for non-standard sources — primary documents, government PDFs, obscure webpages — where Claude acts as the intelligence layer for metadata extraction.
 
 ## Features
 
-- Create any Zotero item type (articles, books, webpages, reports, legal docs, etc.)
-- Attach PDFs from URLs
-- Save webpage snapshots
-- Organize into collections
-- Apply descriptive tags
+- **Search & browse** your existing library
+- **Create** any Zotero item type (articles, books, webpages, reports, legal docs, etc.)
+- **Attach** PDFs from URLs or save webpage snapshots
+- **Add notes** and update metadata on existing items
+- **Organize** into collections with descriptive tags
 
 ## Quick Start (Setup App)
 
 The easiest way to get started is with the setup app:
 
-1. Open the **Add to Zotero — Setup** app from `setup-app/`
-2. Enter your Zotero API credentials (see below)
-3. The app tests your connection and configures Claude Desktop automatically
+<p align="center">
+  <img src="readme-assets/ConfigureZotero.png" width="400" alt="Setup form" />
+  <img src="readme-assets/SuccessfulConfiguration.png" width="400" alt="Setup success" />
+</p>
+
+1. Open the setup app from `setup-app/`
+2. Enter your Zotero API credentials
+3. Click **Test Connection** to verify
+4. Click **Save & Configure Claude Desktop**
+5. Click **Restart Claude Desktop** to load the new configuration
 
 To build and run the setup app:
 
@@ -72,56 +83,58 @@ The "add-to-zotero" tools should now appear.
 
 Once connected, you can ask Claude to:
 
+- "Search my Zotero for papers about machine learning"
 - "Add this article to my Zotero library" (give it a URL)
 - "Create a Zotero entry for this paper with the PDF"
-- "Save this to Zotero as a blog post"
-- "Save a snapshot of this webpage to Zotero"
+- "Add a note summarizing this paper"
+- "Tag this item with 'important' and 'to-read'"
 
-## Available Tools
+## Available Tools (14 total)
 
+### Search & Browse
 | Tool | Description |
 |------|-------------|
-| `get_zotero_help` | Get workflow instructions |
-| `prepare_url_for_zotero` | Get fetch instructions for a URL |
-| `save_to_zotero` | Create an item with metadata and optional PDF/snapshot |
-| `attach_pdf_from_url` | Attach a PDF to an existing item |
-| `attach_snapshot` | Save a webpage as an HTML snapshot |
-| `list_zotero_collections` | List your Zotero collections/folders |
-| `get_zotero_item_types` | List supported item types |
+| `search_items` | Search by text, tags, type, or collection |
+| `get_collection_items` | List items in a specific collection |
+| `get_recent_items` | Recently added/modified items |
+| `list_collections` | All collections (folders) |
+| `list_tags` | All tags in library |
+
+### Read
+| Tool | Description |
+|------|-------------|
+| `get_item` | Full metadata + children summary |
+| `get_item_fulltext` | Extracted text content (from PDFs, etc.) |
+
+### Write
+| Tool | Description |
+|------|-------------|
+| `save_item` | Create item with metadata + attachments |
+| `attach_pdf` | Attach PDF to existing item |
+| `attach_snapshot` | Attach webpage snapshot |
+| `create_note` | Add note to existing item |
+| `update_item` | Modify metadata/tags |
+
+### Utility
+| Tool | Description |
+|------|-------------|
+| `get_help` | Workflow instructions |
+| `get_item_types` | List valid item types |
+| `prepare_url` | Get fetch instructions for a URL |
 
 ## Item Types
 
-- `article` / `journal` — Journal Article
-- `book` — Book
-- `chapter` — Book Section
-- `conference` — Conference Paper
-- `thesis` — Thesis
-- `report` — Report
-- `webpage` — Web Page
-- `blog` — Blog Post
-- `news` — Newspaper Article
-- `magazine` — Magazine Article
-- `document` — Document
-- `legal` — Statute
-- `case` — Case
-- `patent` — Patent
-- `video` — Video Recording
-- `podcast` — Podcast
-- `presentation` — Presentation
+`article` / `journal`, `book`, `chapter`, `conference`, `thesis`, `report`, `webpage`, `blog`, `news`, `magazine`, `document`, `legal`, `case`, `patent`, `video`, `podcast`, `presentation`
 
 ## Troubleshooting
 
-**"Zotero not configured"**
-Check that `ZOTERO_API_KEY` and `ZOTERO_LIBRARY_ID` are set in your Claude Desktop config `env` block.
+**"Zotero not configured"** — Check that `ZOTERO_API_KEY` and `ZOTERO_LIBRARY_ID` are set in your Claude Desktop config.
 
-**"Invalid item type"**
-Use one of the supported types listed above.
+**"Invalid item type"** — Use one of the supported types listed above.
 
-**PDF attachment fails**
-Some sites block automated downloads; try a direct PDF URL.
+**PDF attachment fails** — Some sites block automated downloads; try a direct PDF URL.
 
-**Node.js not found**
-The server requires Node.js. Install it from https://nodejs.org.
+**Node.js not found** — Install from https://nodejs.org.
 
 ## License
 

@@ -11,7 +11,11 @@
       "Bash(node:*)",
       "WebFetch(domain:github.com)",
       "WebFetch(domain:www.zotero.org)",
-      "WebFetch(domain:pyzotero.readthedocs.io)"
+      "WebFetch(domain:pyzotero.readthedocs.io)",
+      "mcp__add-to-zotero__get_item",
+      "WebFetch(domain:developers.cloudflare.com)",
+      "Bash(find:*)",
+      "Bash(grep:*)"
     ]
   }
 }
