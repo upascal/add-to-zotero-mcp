@@ -1,24 +1,33 @@
+<p align="center">
+  <img src="readme-assets/icon.png" width="128" alt="Add to Zotero icon" />
+</p>
 
 # Add to Zotero — MCP Server
 
 A Node.js MCP server that lets Claude **read, write, and manage** items in your Zotero library. Built for non-standard sources — primary documents, government PDFs, obscure webpages — where Claude acts as the intelligence layer for metadata extraction.
 
+> **Alpha release** — This project is under active development. Please [report issues](../../issues) if you run into problems.
+
 ## Features
 
-- **Search & browse** your existing library
+- **Search & browse** your Zotero library (full-text search, tags, collections)
+- **Read** item metadata and extracted full-text content
 - **Create** any Zotero item type (articles, books, webpages, reports, legal docs, etc.)
 - **Attach** PDFs from URLs or save webpage snapshots
-- **Add notes** and update metadata on existing items
 - **Organize** into collections with descriptive tags
+- **Annotate** items with notes and analysis
+- **Update** metadata, tags, and collections on existing items
 
-## Quick Start (Setup App)
+## Installation
 
-The easiest way to get started is with the setup app:
+### Download (Recommended)
 
 <p align="center">
   <img src="readme-assets/ConfigureZotero.png" width="400" alt="Setup form" />
   <img src="readme-assets/SuccessfulConfiguration.png" width="400" alt="Setup success" />
 </p>
+
+Run the setup app, enter your Zotero API credentials, and it will configure Claude Desktop automatically.
 
 1. Open the setup app from `setup-app/`
 2. Enter your Zotero API credentials
@@ -26,30 +35,22 @@ The easiest way to get started is with the setup app:
 4. Click **Save & Configure Claude Desktop**
 5. Click **Restart Claude Desktop** to load the new configuration
 
-To build and run the setup app:
+### Manual Setup
 
-```bash
-cd setup-app
-npm install
-npm start
-```
-
-## Manual Setup
-
-### 1. Get Zotero API Credentials
+#### 1. Get Zotero API Credentials
 
 1. Go to https://www.zotero.org/settings/keys
 2. Note your **Library ID** (shown at the top: "Your userID for use in API calls is: XXXXXX")
-3. Create a new API key with **write access** to your library
+3. Create a new API key with **read/write access** to your library
 
-### 2. Install Dependencies
+#### 2. Install Dependencies
 
 ```bash
 cd server
 npm install
 ```
 
-### 3. Configure Claude Desktop
+#### 3. Configure Claude Desktop
 
 Add to your Claude Desktop config file:
 
@@ -72,7 +73,7 @@ Add to your Claude Desktop config file:
 }
 ```
 
-### 4. Restart Claude Desktop
+#### 4. Restart Claude Desktop
 
 The "add-to-zotero" tools should now appear.
 
@@ -82,35 +83,37 @@ Once connected, you can ask Claude to:
 
 - "Search my Zotero for papers about machine learning"
 - "Add this article to my Zotero library" (give it a URL)
-- "Create a Zotero entry for this paper with the PDF"
-- "Add a note summarizing this paper"
+- "What's in my 'Research' collection?"
+- "Show me the full text of this item"
+- "Save a snapshot of this webpage to Zotero"
+- "Add a summary note to this item"
 - "Tag this item with 'important' and 'to-read'"
 
-## Available Tools (14 total)
+## Available Tools (14)
 
 ### Search & Browse
 | Tool | Description |
 |------|-------------|
-| `search_items` | Search by text, tags, type, or collection |
+| `search_items` | Search library by text, tags, type, or collection |
 | `get_collection_items` | List items in a specific collection |
 | `get_recent_items` | Recently added/modified items |
-| `list_collections` | All collections (folders) |
+| `list_collections` | All collections (folders) in the library |
 | `list_tags` | All tags in library |
 
 ### Read
 | Tool | Description |
 |------|-------------|
-| `get_item` | Full metadata + children summary |
-| `get_item_fulltext` | Extracted text content (from PDFs, etc.) |
+| `get_item` | Full metadata + children summary for a single item |
+| `get_item_fulltext` | Extracted text content (from PDFs, notes, etc.) |
 
 ### Write
 | Tool | Description |
 |------|-------------|
-| `save_item` | Create item with metadata + attachments |
+| `save_item` | Create new item with metadata + attachments |
 | `attach_pdf` | Attach PDF to existing item |
-| `attach_snapshot` | Attach webpage snapshot |
-| `create_note` | Add note to existing item |
-| `update_item` | Modify metadata/tags |
+| `attach_snapshot` | Attach webpage snapshot to existing item |
+| `create_note` | Create note on existing item |
+| `update_item` | Modify metadata/tags on existing item |
 
 ### Utility
 | Tool | Description |

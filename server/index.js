@@ -57,7 +57,7 @@ function getCredentials() {
 
 const server = new McpServer({
   name: "add-to-zotero",
-  version: "2.0.0",
+  version: "0.1.0",
 });
 
 // =========================================================================
