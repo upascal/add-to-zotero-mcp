@@ -1,4 +1,4 @@
-# Add to Zotero MCP — Project Context
+# Zotero Assistant MCP — Project Context
 
 ## Purpose
 

@@ -1,4 +1,4 @@
-# Add to Zotero MCP — Development Tasks
+# Zotero Assistant MCP — Development Tasks
 
 ## Current Sprint
 - [x] Full read/write/manage implementation (plan.md)

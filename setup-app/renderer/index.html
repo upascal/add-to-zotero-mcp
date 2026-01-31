@@ -1,24 +1,27 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline'; script-src 'self'">
-  <title>Add to Zotero — Setup</title>
+  <meta http-equiv="Content-Security-Policy"
+    content="default-src 'self'; style-src 'self' 'unsafe-inline'; script-src 'self'">
+  <title>Zotero Assistant — Setup</title>
   <link rel="stylesheet" href="styles.css">
 </head>
+
 <body>
   <div class="container">
     <!-- Header -->
     <header class="header">
       <div class="logo">
         <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
-          <rect width="32" height="32" rx="8" fill="#CC2936"/>
+          <rect width="32" height="32" rx="8" fill="#CC2936" />
           <text x="16" y="23" text-anchor="middle" font-size="20" font-weight="bold" fill="white">Z</text>
         </svg>
       </div>
       <div>
-        <h1>Add to Zotero</h1>
+        <h1>Zotero Assistant</h1>
         <p class="subtitle">MCP Server Setup</p>
       </div>
     </header>
@@ -49,13 +52,7 @@
             </p>
           </div>
         </div>
-        <input
-          type="text"
-          id="library-id"
-          placeholder="e.g. 1234567"
-          autocomplete="off"
-          spellcheck="false"
-        >
+        <input type="text" id="library-id" placeholder="e.g. 1234567" autocomplete="off" spellcheck="false">
         <div id="library-id-error" class="field-error"></div>
       </div>
 
@@ -71,13 +68,7 @@
             </p>
           </div>
         </div>
-        <input
-          type="password"
-          id="api-key"
-          placeholder="Paste your API key"
-          autocomplete="off"
-          spellcheck="false"
-        >
+        <input type="password" id="api-key" placeholder="Paste your API key" autocomplete="off" spellcheck="false">
         <div id="api-key-error" class="field-error"></div>
 
         <!-- Test Connection -->
@@ -110,7 +101,7 @@
           <h3>Next steps</h3>
           <ol>
             <li>Restart Claude Desktop to load the new configuration</li>
-            <li>Look for <strong>add-to-zotero</strong> in Claude's tools</li>
+            <li>Look for <strong>zotero-assistant</strong> in Claude's tools</li>
             <li>Ask Claude to save something to your Zotero library!</li>
           </ol>
         </div>
@@ -128,4 +119,5 @@
 
   <script src="app.js"></script>
 </body>
+
 </html>

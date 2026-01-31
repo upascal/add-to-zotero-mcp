@@ -44,7 +44,7 @@ function getCredentials() {
   if (!apiKey || !libraryId) {
     throw new Error(
       "Zotero not configured. Set ZOTERO_API_KEY and ZOTERO_LIBRARY_ID environment variables. " +
-        "Get credentials from: https://www.zotero.org/settings/keys"
+      "Get credentials from: https://www.zotero.org/settings/keys"
     );
   }
 
@@ -56,7 +56,7 @@ function getCredentials() {
 // -------------------------------------------------------------------------
 
 const server = new McpServer({
-  name: "add-to-zotero",
+  name: "zotero-assistant",
   version: "0.1.0",
 });
 
@@ -156,10 +156,10 @@ server.registerTool(
       is_pdf: isPdf,
       instructions: isPdf
         ? "This appears to be a PDF. When you call save_item, " +
-          "include this URL as the pdf_url parameter to attach it."
+        "include this URL as the pdf_url parameter to attach it."
         : "DO NOT open a browser tab for this URL. " +
-          "Use your built-in web_fetch or read_url tool to get the content. " +
-          "Then extract the metadata and call save_item.",
+        "Use your built-in web_fetch or read_url tool to get the content. " +
+        "Then extract the metadata and call save_item.",
       next_steps: [
         `1. Fetch content from ${url} using your internal tools`,
         "2. Extract: title, authors, date, abstract, tags",
@@ -423,7 +423,7 @@ server.registerTool(
         .default("webpage")
         .describe(
           "Type: article, journal, book, chapter, conference, thesis, report, " +
-            "webpage, blog, news, magazine, document, legal, case, patent, video, podcast, presentation"
+          "webpage, blog, news, magazine, document, legal, case, patent, video, podcast, presentation"
         ),
       authors: z
         .array(z.string())

@@ -32,7 +32,7 @@ function getServerIndexPath() {
 // ---------------------------------------------------------------------------
 
 function getSettingsDir() {
-  const dir = app.getPath("userData"); // e.g. ~/Library/Application Support/add-to-zotero-setup
+  const dir = app.getPath("userData"); // e.g. ~/Library/Application Support/zotero-assistant-setup
   if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
   return dir;
 }
@@ -165,7 +165,7 @@ function configureClaudeDesktop(apiKey, libraryId) {
       config.mcpServers = {};
     }
 
-    config.mcpServers["add-to-zotero"] = serverConfig;
+    config.mcpServers["zotero-assistant"] = serverConfig;
     fs.writeFileSync(configPath, JSON.stringify(config, null, 2), "utf-8");
 
     return { success: true, path: configPath };
@@ -247,7 +247,7 @@ function createWindow() {
     resizable: true,
     minWidth: 480,
     minHeight: 560,
-    title: "Add to Zotero — Setup",
+    title: "Zotero Assistant — Setup",
     webPreferences: {
       preload: path.join(__dirname, "preload.js"),
       contextIsolation: true,

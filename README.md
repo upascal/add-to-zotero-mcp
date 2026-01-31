@@ -1,4 +1,4 @@
-# Add to Zotero — MCP Server
+# Zotero Assistant — MCP Server
 
 A Node.js MCP server that lets Claude **read, write, and manage** items in your Zotero library. Built for non-standard sources — primary documents, government PDFs, obscure webpages — where Claude acts as the intelligence layer for metadata extraction.
 
@@ -26,8 +26,8 @@ A Node.js MCP server that lets Claude **read, write, and manage** items in your 
 
 #### Setup App Download Links
 
-[![Download for macOS](assets/download-mac.svg)](../../releases/latest/download/Add-to-Zotero-Setup.dmg)
-[![Download for Windows](assets/download-windows.svg)](../../releases/latest/download/Add-to-Zotero-Setup.exe)
+[![Download for macOS](assets/download-mac.svg)](../../releases/latest/download/Zotero-Assistant-Setup.dmg)
+[![Download for Windows](assets/download-windows.svg)](../../releases/latest/download/Zotero-Assistant-Setup.exe)
 
 #### Configure Setup App
 
@@ -66,9 +66,9 @@ Add to your Claude Desktop config file:
 ```json
 {
   "mcpServers": {
-    "add-to-zotero": {
+    "zotero-assistant": {
       "command": "node",
-      "args": ["/path/to/add-to-zotero-mcp/server/index.js"],
+      "args": ["/path/to/zotero-assistant-mcp/server/index.js"],
       "env": {
         "ZOTERO_API_KEY": "your_api_key_here",
         "ZOTERO_LIBRARY_ID": "your_library_id_here"
@@ -80,7 +80,7 @@ Add to your Claude Desktop config file:
 
 #### 4. Restart Claude Desktop
 
-The "add-to-zotero" tools should now appear.
+The "zotero-assistant" tools should now appear.
 
 ## Usage
 

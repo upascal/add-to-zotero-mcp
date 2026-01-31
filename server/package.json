@@ -1,7 +1,7 @@
 {
-  "name": "add-to-zotero-mcp-server",
+  "name": "zotero-assistant-mcp-server",
   "version": "0.1.0",
-  "description": "MCP server for adding items to Zotero — Node.js edition",
+  "description": "MCP server for reading, writing, and managing items in Zotero",
   "type": "module",
   "main": "index.js",
   "scripts": {
