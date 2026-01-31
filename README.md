@@ -134,6 +134,10 @@ Once connected, you can ask Claude to:
 
 **"Zotero not configured"** — Check that `ZOTERO_API_KEY` and `ZOTERO_LIBRARY_ID` are set in your Claude Desktop config.
 
+<p align="center">
+  <img src="assets/CreateZoteroKey.png" width="400" alt="Create Zotero key" />
+</p>
+
 **"Invalid item type"** — Use one of the supported types listed above.
 
 **PDF attachment fails** — Some sites block automated downloads; try a direct PDF URL.
