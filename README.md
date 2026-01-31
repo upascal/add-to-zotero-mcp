@@ -139,7 +139,7 @@ Once connected, you can ask Claude to:
 
 **PDF attachment fails** — Some sites block automated downloads; try a direct PDF URL.
 
-**Node.js not found** — Install from https://nodejs.org.
+**Node.js not found** — The MCP server runs on Node.js. Install it from https://nodejs.org if you don't have it.
 
 ## License
 

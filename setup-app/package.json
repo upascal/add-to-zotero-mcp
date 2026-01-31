@@ -2,6 +2,7 @@
   "name": "add-to-zotero-setup",
   "version": "0.1.0",
   "description": "Setup wizard for Add to Zotero MCP Server",
+  "author": "upascal",
   "main": "main.js",
   "scripts": {
     "start": "electron .",
@@ -21,18 +22,24 @@
       {
         "from": "../server",
         "to": "server",
-        "filter": ["**/*", "!node_modules"]
+        "filter": [
+          "**/*",
+          "!node_modules"
+        ]
       }
     ],
     "mac": {
       "target": "dmg",
-      "identity": null
+      "identity": null,
+      "icon": "../assets/icon/icon.icns"
     },
     "win": {
-      "target": "nsis"
+      "target": "nsis",
+      "icon": "../assets/icon/icon.ico"
     },
     "linux": {
-      "target": "AppImage"
+      "target": "AppImage",
+      "icon": "../assets/icon"
     }
   },
   "devDependencies": {

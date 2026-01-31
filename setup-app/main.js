@@ -176,15 +176,64 @@ function configureClaudeDesktop(apiKey, libraryId) {
 
 /**
  * Check if Node.js is available on the system.
+ * When launched from Finder, PATH may not include common Node install locations,
+ * so we check those explicitly.
  */
 function checkNodeAvailable() {
   const { execSync } = require("child_process");
+
+  // Common Node.js install locations on macOS
+  const nodePaths = [
+    "node", // PATH lookup (works in terminal)
+    "/usr/local/bin/node", // Homebrew (Intel Mac)
+    "/opt/homebrew/bin/node", // Homebrew (Apple Silicon)
+    path.join(os.homedir(), ".nvm/versions/node"), // nvm (we'll glob this)
+    path.join(os.homedir(), ".local/share/fnm/node-versions"), // fnm
+    path.join(os.homedir(), ".volta/bin/node"), // volta
+  ];
+
+  // First try PATH lookup
   try {
-    const version = execSync("node --version", { encoding: "utf-8" }).trim();
-    return { available: true, version };
+    const version = execSync("node --version", { encoding: "utf-8", timeout: 5000 }).trim();
+    return { available: true, version, nodePath: "node" };
   } catch {
-    return { available: false, version: null };
+    // PATH lookup failed, try common locations
   }
+
+  // Try common install locations
+  for (const nodePath of nodePaths.slice(1)) { // skip "node" since we already tried
+    if (nodePath.includes(".nvm") || nodePath.includes("fnm")) {
+      // For version managers, check if the directory exists
+      try {
+        if (fs.existsSync(nodePath)) {
+          // Find the latest installed version
+          const versions = fs.readdirSync(nodePath).filter(v => v.startsWith("v"));
+          if (versions.length > 0) {
+            const latest = versions.sort().pop();
+            const fullPath = path.join(nodePath, latest, "bin", "node");
+            if (fs.existsSync(fullPath)) {
+              const version = execSync(`"${fullPath}" --version`, { encoding: "utf-8", timeout: 5000 }).trim();
+              return { available: true, version, nodePath: fullPath };
+            }
+          }
+        }
+      } catch {
+        // Continue checking other paths
+      }
+    } else {
+      // Direct path check
+      try {
+        if (fs.existsSync(nodePath)) {
+          const version = execSync(`"${nodePath}" --version`, { encoding: "utf-8", timeout: 5000 }).trim();
+          return { available: true, version, nodePath };
+        }
+      } catch {
+        // Continue checking other paths
+      }
+    }
+  }
+
+  return { available: false, version: null, nodePath: null };
 }
 
 // ---------------------------------------------------------------------------
