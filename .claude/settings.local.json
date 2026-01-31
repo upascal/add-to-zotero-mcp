@@ -15,7 +15,11 @@
       "mcp__add-to-zotero__get_item",
       "WebFetch(domain:developers.cloudflare.com)",
       "Bash(find:*)",
-      "Bash(grep:*)"
+      "Bash(grep:*)",
+      "Bash(npm run build:mac:*)",
+      "Bash(npx electron-builder:*)",
+      "WebFetch(domain:www.electron.build)",
+      "Bash(tree:*)"
     ]
   }
 }
