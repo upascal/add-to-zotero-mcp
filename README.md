@@ -1,6 +1,6 @@
 # Zotero Assistant — MCP Server
 
-A Node.js MCP server that lets Claude **read, write, and manage** items in your Zotero library. Built for non-standard sources — primary documents, government PDFs, obscure webpages — where Claude acts as the intelligence layer for metadata extraction.
+A Node.js MCP server that lets Claude Desktop **read, write, and manage** items in your Zotero library.
 
 > **Alpha release** — This project is under active development. Please [report issues](../../issues) if you run into problems.
 
@@ -37,8 +37,6 @@ A Node.js MCP server that lets Claude **read, write, and manage** items in your 
 </p>
 
 Run the setup app, enter your Zotero API credentials, and it will configure Claude Desktop automatically.
-
-
 
 ### Manual Setup
 
@@ -132,6 +130,7 @@ Once connected, you can ask Claude to:
 `article` / `journal`, `book`, `chapter`, `conference`, `thesis`, `report`, `webpage`, `blog`, `news`, `magazine`, `document`, `legal`, `case`, `patent`, `video`, `podcast`, `presentation`
 
 ## Troubleshooting
+**Claude can't find the Zotero Assistant tools** — Make you are using the latest version of Claude Desktop. Restart Claude Desktop and try again.
 
 **"Zotero not configured"** — Check that `ZOTERO_API_KEY` and `ZOTERO_LIBRARY_ID` are set in your Claude Desktop config.
 
