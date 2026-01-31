@@ -1,6 +1,3 @@
-<p align="center">
-  <img src="readme-assets/icon.png" width="128" alt="Add to Zotero icon" />
-</p>
 
 # Add to Zotero — MCP Server
 
