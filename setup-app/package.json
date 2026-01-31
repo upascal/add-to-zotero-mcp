@@ -34,7 +34,7 @@
     ],
     "mac": {
       "target": "dmg",
-      "identity": null,
+      "identity": "-",
       "icon": "../assets/icon/icon.icns",
       "artifactName": "Zotero-Assistant-Setup.${ext}"
     },
