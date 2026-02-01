@@ -1,6 +1,6 @@
 # Zotero Assistant — MCP Server
 
-A Node.js MCP server that lets Claude Desktop **read, write, and manage** items in your Zotero library.
+A local Node.js MCP server that lets Claude Desktop **read, write, and manage** items in your Zotero library.
 
 > **Alpha release** — This project is under active development. Please [report issues](../../issues) if you run into problems.
 
